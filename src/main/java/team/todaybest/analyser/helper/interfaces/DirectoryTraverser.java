@@ -1,4 +1,4 @@
-package team.todaybest.analyser.helper;
+package team.todaybest.analyser.helper.interfaces;
 
 import java.io.File;
 

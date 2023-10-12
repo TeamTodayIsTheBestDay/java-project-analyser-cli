@@ -4,6 +4,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,4 +19,9 @@ public class JavaPackage {
 
     List<JavaPackage> childrenPackages;
     JavaPackage parentPackage;
+
+    public JavaPackage(){
+        this.files = new ArrayList<>();
+        this.childrenPackages = new ArrayList<>();
+    }
 }

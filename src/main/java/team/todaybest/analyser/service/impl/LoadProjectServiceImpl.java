@@ -4,9 +4,8 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import team.todaybest.analyser.helper.DirectoryTraverser;
+import team.todaybest.analyser.helper.interfaces.DirectoryTraverser;
 import team.todaybest.analyser.helper.FileSystemHelper;
 import team.todaybest.analyser.model.JavaFile;
 import team.todaybest.analyser.model.JavaPackage;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 读取一个项目。
@@ -36,8 +34,6 @@ public class LoadProjectServiceImpl implements LoadProjectService {
 
     @Override
     public JavaProject loadProject(File startDir) {
-        var project = new JavaProject();
-
         List<Future<Void>> futures = new ArrayList<>(); // 用于跟踪已提交任务的Future
 
         // 清理局部变量
@@ -70,11 +66,8 @@ public class LoadProjectServiceImpl implements LoadProjectService {
             }
         }
 
-        // 将缓存的Packages制作成Projects
-
-
-
-        return null;
+        // 将缓存的Packages制作成Project
+        return resolvePackages();
     }
 
     private JavaFile loadFile(File fileObj) {
@@ -123,7 +116,48 @@ public class LoadProjectServiceImpl implements LoadProjectService {
         return file;
     }
 
-    private JavaProject resolvePackages(){
+    /**
+     * 将上一步中收集的Packages制作成树形结构
+     *
+     * @return 完成制作的Project
+     */
+    private JavaProject resolvePackages() {
+        // 制作树形结构
+        packageMap.forEach((key, value) -> {
+            var packageNameList = splitPackageName(key);
+            for (int i = packageNameList.size() - 1; i > 0; i--) {
+                // 层层遍历寻找父包
+                var fatherName = joinPackageName(packageNameList.subList(0, i));
+                if (packageMap.containsKey(fatherName)) {
+                    var fatherPackage = packageMap.get(fatherName);
+                    fatherPackage.getChildrenPackages().add(value);
+                    value.setParentPackage(fatherPackage);
+                    break;
+                }
+            }
+        });
 
+        // 找出根节点（们）
+        var project = new JavaProject();
+        packageMap.values().forEach(javaPackage->{
+            if (javaPackage.getParentPackage()==null){
+                project.getPackages().add(javaPackage);
+            }
+        });
+        return project;
+    }
+
+    /**
+     * 帮手：拆解包名
+     */
+    private List<String> splitPackageName(String packageName) {
+        return List.of(packageName.split("\\."));
+    }
+
+    /**
+     * 帮手：合并包名
+     */
+    private String joinPackageName(List<String> packageNameList) {
+        return String.join(".", packageNameList);
     }
 }

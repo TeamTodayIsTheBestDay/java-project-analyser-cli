@@ -27,6 +27,11 @@ public class AnalyseShellComponent {
         analyseService.openProject(path);
     }
 
+    @ShellMethod("List the packages, files, classes and interfaces of the project")
+    public void list(){
+        analyseService.listProject();
+    }
+
     @ShellMethod("Test")
     void test() throws IOException {
         var unit = StaticJavaParser.parse(Path.of("/Users/cineazhan/codelab/53JavaEEProjectA/java-project-analyser-cli/src/main/java/team/todaybest/analyser/component/AnalyseShellComponent.java"));

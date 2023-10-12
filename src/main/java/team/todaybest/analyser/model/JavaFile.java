@@ -4,6 +4,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,4 +18,8 @@ public class JavaFile {
     String packageName;
     CompilationUnit compilationUnit;
     List<ClassOrInterfaceDeclaration> declarations;
+
+    public JavaFile(){
+        this.declarations = new ArrayList<>();
+    }
 }

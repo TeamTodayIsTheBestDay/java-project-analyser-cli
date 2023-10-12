@@ -1,5 +1,7 @@
 package team.todaybest.analyser.helper;
 
+import team.todaybest.analyser.helper.interfaces.DirectoryTraverser;
+
 import java.io.File;
 import java.util.Objects;
 

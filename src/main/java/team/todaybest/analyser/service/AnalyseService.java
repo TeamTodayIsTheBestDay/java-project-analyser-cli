@@ -5,4 +5,6 @@ package team.todaybest.analyser.service;
  */
 public interface AnalyseService {
     void openProject(String path);
+
+    void listProject();
 }
