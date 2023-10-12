@@ -15,4 +15,7 @@ import java.util.List;
 public class JavaPackage {
     PackageDeclaration packageDeclaration;
     List<JavaFile> files;
+
+    List<JavaPackage> childrenPackages;
+    JavaPackage parentPackage;
 }
