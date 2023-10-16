@@ -14,12 +14,12 @@ import java.util.List;
  */
 @Data
 public class JavaFile {
-    String fileName;
-    String packageName;
-    CompilationUnit compilationUnit;
-    List<ClassOrInterfaceDeclaration> declarations;
+    private String fileName;
+    private String packageName;
+    private CompilationUnit compilationUnit;
+    private List<JavaClass> classes;
 
     public JavaFile(){
-        this.declarations = new ArrayList<>();
+        this.classes = new ArrayList<>();
     }
 }

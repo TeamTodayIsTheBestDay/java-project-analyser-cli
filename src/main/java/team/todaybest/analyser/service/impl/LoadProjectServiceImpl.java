@@ -2,14 +2,15 @@ package team.todaybest.analyser.service.impl;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import team.todaybest.analyser.helper.interfaces.DirectoryTraverser;
 import team.todaybest.analyser.helper.FileSystemHelper;
-import team.todaybest.analyser.model.JavaFile;
-import team.todaybest.analyser.model.JavaPackage;
-import team.todaybest.analyser.model.JavaProject;
+import team.todaybest.analyser.model.*;
 import team.todaybest.analyser.service.LoadProjectService;
 
 import java.io.File;
@@ -17,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 读取一个项目。
@@ -28,43 +31,35 @@ import java.util.concurrent.*;
 @Service
 public class LoadProjectServiceImpl implements LoadProjectService {
     ExecutorService executor = Executors.newCachedThreadPool();
+    AtomicInteger loadProjectThreads = new AtomicInteger(0);
 
     // 线程安全的几个成员变量
     Map<String, JavaPackage> packageMap = new ConcurrentHashMap<>(); // 线程安全的Map
 
     @Override
     public JavaProject loadProject(File startDir) {
-        List<Future<Void>> futures = new ArrayList<>(); // 用于跟踪已提交任务的Future
-
         // 清理局部变量
         packageMap.clear();
 
         // 遍历目录、读取所有文件
-        FileSystemHelper.traverseDirectories(startDir, new DirectoryTraverser() {
-            @Override
-            public void process(File file) {
-                if (file.getName().matches(".*\\.java")) {
-                    Future<Void> future = executor.submit(() -> {
-                        var javaFile = loadFile(file);
-                        return null;
-                    });
-                    futures.add(future);
-                }
+        FileSystemHelper.traverseDirectories(startDir, file -> {
+            if (file.getName().matches(".*\\.java")) {
+                executor.submit(() -> {
+                    loadProjectThreads.addAndGet(1);
+                    var javaFile = loadFile(file);
+                    loadProjectThreads.addAndGet(-1);
+                });
             }
         });
 
         // 等待遍历结束
-        for (var future : futures) {
+        do {
             try {
-                future.get();
+                Thread.sleep(50);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            } catch (ExecutionException e) {
-                log.error("Error processing file", e);
-                throw new RuntimeException();
+                throw new RuntimeException(e);
             }
-        }
+        } while (loadProjectThreads.get() > 0);
 
         // 将缓存的Packages制作成Project
         return resolvePackages();
@@ -106,14 +101,53 @@ public class LoadProjectServiceImpl implements LoadProjectService {
 
         file.setCompilationUnit(cu);
 
+        // 预处理导入项目s
+        var importDeclarationMap = cu.getImports().stream().collect(Collectors.toMap(importDeclaration -> importDeclaration.getName().getIdentifier(), NodeWithName::getNameAsString));
+
         // 将接口和类的定义保存
-        file.setDeclarations(cu.getChildNodes().stream()
+        file.setClasses(cu.getChildNodes().stream()
                 .filter(node -> node instanceof ClassOrInterfaceDeclaration)
-                .map(node -> (ClassOrInterfaceDeclaration) node)
-                .toList())
-        ;
+                .map(node -> resolveJavaClasses(node, importDeclarationMap))
+                .toList());
 
         return file;
+    }
+
+    /**
+     * 将Java类解析并导入。
+     * <br/>
+     * 备注：为了调用的时候方便，传入类型是AST树的节点。
+     *
+     * @return 完成制作的Class
+     */
+    private JavaClass resolveJavaClasses(Node node, Map<String, String> importDeclarationMap) {
+        assert node instanceof ClassOrInterfaceDeclaration;
+        var declaration = (ClassOrInterfaceDeclaration) node;
+
+        var javaClass = new JavaClass();
+
+        assert declaration.getFullyQualifiedName().isPresent(); // 暴躁老哥，在线assert（懒鬼是这样的）
+        var classRef = declaration.getFullyQualifiedName().get();
+        javaClass.setDeclaration(declaration);
+        javaClass.setClassReference(classRef);
+
+        // 扫描其中的方法
+        javaClass.setMethods(declaration.getMethods().stream().map(methodDeclaration -> {
+            var method = new JavaMethod();
+            method.setDeclaration(methodDeclaration);
+            method.setName(methodDeclaration.getNameAsString());
+            method.setClassReference(classRef);
+
+            var returnReference = methodDeclaration.getTypeAsString();
+            if (importDeclarationMap.containsKey(returnReference)) {
+                returnReference = importDeclarationMap.get(returnReference);
+            }
+            method.setReturnClassReference(returnReference);
+
+            return method;
+        }).toList());
+
+        return javaClass;
     }
 
     /**
@@ -139,8 +173,8 @@ public class LoadProjectServiceImpl implements LoadProjectService {
 
         // 找出根节点（们）
         var project = new JavaProject();
-        packageMap.values().forEach(javaPackage->{
-            if (javaPackage.getParentPackage()==null){
+        packageMap.values().forEach(javaPackage -> {
+            if (javaPackage.getParentPackage() == null) {
                 project.getPackages().add(javaPackage);
             }
         });

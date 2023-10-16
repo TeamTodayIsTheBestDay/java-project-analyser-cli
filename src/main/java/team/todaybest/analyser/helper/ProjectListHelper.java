@@ -74,14 +74,14 @@ public class ProjectListHelper {
 
         javaPackages.forEach(javaPackage -> {
             javaPackage.getFiles().forEach(javaFile -> {
-                javaFile.getDeclarations().forEach(declaration -> {
+                javaFile.getClasses().forEach(declaration -> {
                     String type = "C";
-                    if (declaration.isInterface()) {
+                    if (declaration.getDeclaration().isInterface()) {
                         type = "I";
                     }
 
                     classes.add(
-                            String.format("%s (%s) %s", type, javaPackage.getPackageDeclaration().getName(), declaration.getName())
+                            String.format("%s (%s) %s", type, javaPackage.getPackageDeclaration().getName(), declaration.getDeclaration().getName())
                     );
                 });
             });

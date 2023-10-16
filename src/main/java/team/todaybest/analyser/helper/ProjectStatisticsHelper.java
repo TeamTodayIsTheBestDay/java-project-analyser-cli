@@ -17,6 +17,7 @@ public class ProjectStatisticsHelper {
         int packageCount = 0;
         int fileCount = 0;
         int classAndInterfaceCount = 0;
+        int methodsCount = 0;
 
         // 统计包
         packageCount = countPackagesRecursive(project.getPackages());
@@ -27,10 +28,15 @@ public class ProjectStatisticsHelper {
         // 统计声明数
         classAndInterfaceCount = countClassAndInterfaceRecursive(project.getPackages());
 
+        // 统计方法数
+        methodsCount = countMethodsRecursive(project.getPackages());
+
         return ProjectStatistics.builder()
                 .packageCount(packageCount)
                 .fileCount(fileCount)
-                .classAndInterfaceCount(classAndInterfaceCount).build();
+                .classAndInterfaceCount(classAndInterfaceCount)
+                .methodsCount(methodsCount)
+                .build();
     }
 
     private static int countPackagesRecursive(List<JavaPackage> packages) {
@@ -59,9 +65,24 @@ public class ProjectStatisticsHelper {
 
         packages.forEach(javaPackage -> {
             javaPackage.getFiles().forEach(javaFile -> {
-                result.addAndGet(javaFile.getDeclarations().size());
+                result.addAndGet(javaFile.getClasses().size());
             });
-            result.addAndGet(countFilesRecursive(javaPackage.getChildrenPackages()));
+            result.addAndGet(countClassAndInterfaceRecursive(javaPackage.getChildrenPackages()));
+        });
+
+        return result.get();
+    }
+
+    private static int countMethodsRecursive(List<JavaPackage> packages) {
+        AtomicInteger result = new AtomicInteger(0);
+
+        packages.forEach(javaPackage -> {
+            javaPackage.getFiles().forEach(javaFile -> {
+                javaFile.getClasses().forEach(javaClass -> {
+                    result.addAndGet(javaClass.getMethods().size());
+                });
+            });
+            result.addAndGet(countMethodsRecursive(javaPackage.getChildrenPackages()));
         });
 
         return result.get();

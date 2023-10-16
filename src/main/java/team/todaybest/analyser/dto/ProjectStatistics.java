@@ -13,4 +13,5 @@ public class ProjectStatistics {
     private int packageCount;
     private int fileCount;
     private int classAndInterfaceCount;
+    private int methodsCount;
 }

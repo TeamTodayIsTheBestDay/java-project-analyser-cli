@@ -3,8 +3,10 @@ package team.todaybest.analyser.service;
 /**
  * @author cineazhan
  */
-public interface AnalyseService {
+public interface AnalysisService {
     void openProject(String path);
 
     void listProject();
+
+    void getInstances(String classReference);
 }

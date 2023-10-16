@@ -14,11 +14,11 @@ import java.util.List;
  */
 @Data
 public class JavaPackage {
-    PackageDeclaration packageDeclaration;
-    List<JavaFile> files;
+    private PackageDeclaration packageDeclaration;
+    private List<JavaFile> files;
 
-    List<JavaPackage> childrenPackages;
-    JavaPackage parentPackage;
+    private List<JavaPackage> childrenPackages;
+    private JavaPackage parentPackage;
 
     public JavaPackage(){
         this.files = new ArrayList<>();
