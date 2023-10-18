@@ -66,6 +66,11 @@ public class ClassesServiceImpl implements ClassesService {
         return result;
     }
 
+    @Override
+    public void makeClassesMap(JavaProject project) {
+
+    }
+
     /**
      * 备注：只有import了目标的类，才进入这个函数进行扫描。
      */
@@ -196,5 +201,11 @@ public class ClassesServiceImpl implements ClassesService {
             var res = new ClassesServiceImpl().searchInstancesInClasses("ArrayList<ClassInstance>", clz.get());
             System.out.println(res.size());
         }
+    }
+
+    @Override
+    public ClassOrInterfaceDeclaration searchClasses(String classReference, JavaProject project) {
+
+        return null;
     }
 }

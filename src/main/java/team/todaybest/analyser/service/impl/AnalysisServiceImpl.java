@@ -121,4 +121,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     }
 
+    @Override
+    public void functionRelationship(String classReference, String functionName) {
+
+    }
+
 }

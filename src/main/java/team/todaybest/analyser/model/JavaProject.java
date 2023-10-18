@@ -18,6 +18,8 @@ public class JavaProject {
 
     private Map<String,JavaMethod> methodMap;
 
+    private Map<String,JavaMethod> classMap;
+
     public JavaProject() {
         this.packages = new ArrayList<>();
     }

@@ -1,5 +1,7 @@
 package team.todaybest.analyser.service;
 
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import team.todaybest.analyser.dto.ClassInstance;
 import team.todaybest.analyser.model.JavaProject;
 
@@ -17,4 +19,14 @@ public interface ClassesService {
      * @return 所有存在的类实例列表
      */
     List<ClassInstance> searchAllInstance(String classPath, JavaProject project);
+
+    /**
+     * 预缓存project的类
+     */
+    void makeClassesMap(JavaProject project);
+
+    /**
+     * 找到某个类
+     */
+    ClassOrInterfaceDeclaration searchClasses(String classReference, JavaProject project);
 }

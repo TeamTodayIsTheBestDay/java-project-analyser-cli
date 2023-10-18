@@ -9,4 +9,6 @@ public interface AnalysisService {
     void listProject();
 
     void getInstances(String classReference);
+
+    void functionRelationship(String classReference, String functionName);
 }
