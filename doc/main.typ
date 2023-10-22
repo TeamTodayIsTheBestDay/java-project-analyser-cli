@@ -25,7 +25,7 @@
     align: horizon,
     [*Name*],[*Matr. No.*],[*Contact number*],[*Email address*],
     [Zhang Yao],[2152955],[+86 13518772062],[zhang\@cinea.cc],
-    [Tang Shuhan],[],[],[],
+    [Tang Shuhan],[2153877],[+86 15300862015],[2405353202@qq.com],
     [Wang Shuyu],[2151894],[+86 17709584390],[1491456253@qq.com],
     [Tang Kexian],[],[],[]
 )
