@@ -14,6 +14,7 @@ import java.util.List;
  */
 @Data
 public class JavaFile {
+    private String path;
     private String fileName;
     private String packageName;
     private CompilationUnit compilationUnit;

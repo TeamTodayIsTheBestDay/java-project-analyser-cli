@@ -15,15 +15,16 @@ import org.springframework.shell.standard.ShellMethod;
 import org.springframework.stereotype.Service;
 import team.todaybest.analyser.dto.ClassInstance;
 import team.todaybest.analyser.helper.JavaProjectHelper;
+import team.todaybest.analyser.model.JavaClass;
 import team.todaybest.analyser.model.JavaFile;
+import team.todaybest.analyser.model.JavaPackage;
 import team.todaybest.analyser.model.JavaProject;
 import team.todaybest.analyser.service.ClassesService;
 import team.todaybest.analyser.service.ImportService;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author cinea
@@ -68,8 +69,31 @@ public class ClassesServiceImpl implements ClassesService {
 
     @Override
     public void makeClassesMap(JavaProject project) {
+        var map = new HashMap<String,JavaClass>();
 
+        project.getPackages().forEach(javaPackage -> {
+            traverseClassesRecursive(javaPackage,javaClass -> {
+                map.put(javaClass.getClassReference(), javaClass);
+            });
+        });
+
+        project.setClassMap(map);
     }
+
+    private void traverseClassesRecursive(JavaPackage javaPackage, javaClassOperation operation) {
+        javaPackage.getFiles().forEach(javaFile -> {
+            javaFile.getClasses().forEach(operation::operate);
+        });
+        javaPackage.getChildrenPackages().forEach(childPackage -> {
+            traverseClassesRecursive(childPackage, operation);
+        });
+    }
+
+    @FunctionalInterface
+    interface javaClassOperation {
+        void operate(JavaClass javaClass);
+    }
+
 
     /**
      * 备注：只有import了目标的类，才进入这个函数进行扫描。
@@ -205,6 +229,7 @@ public class ClassesServiceImpl implements ClassesService {
 
     @Override
     public ClassOrInterfaceDeclaration searchClasses(String classReference, JavaProject project) {
+
 
         return null;
     }

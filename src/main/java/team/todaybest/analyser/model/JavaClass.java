@@ -16,6 +16,9 @@ public class JavaClass {
     private String classReference;
     private List<JavaMethod> methods;
 
+    // 所在的文件
+    private JavaFile javaFile;
+
     public JavaClass(){
         this.methods = new ArrayList<>();
     }

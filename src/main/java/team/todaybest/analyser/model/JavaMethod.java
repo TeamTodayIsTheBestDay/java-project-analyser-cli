@@ -15,6 +15,7 @@ public class JavaMethod {
      * 所在的类
      */
     private String classReference;
+    private JavaClass javaClass;
 
     /**
      * 返回的类

@@ -1,11 +1,17 @@
 package team.todaybest.analyser.service.impl;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import team.todaybest.analyser.helper.interfaces.DirectoryTraverser;
@@ -36,30 +42,44 @@ public class LoadProjectServiceImpl implements LoadProjectService {
     // 线程安全的几个成员变量
     Map<String, JavaPackage> packageMap = new ConcurrentHashMap<>(); // 线程安全的Map
 
+    // 好东西
+    JavaParser javaParser;
+
     @Override
     public JavaProject loadProject(File startDir) {
         // 清理局部变量
         packageMap.clear();
 
+        // 初始化分析器
+        ParserConfiguration parserConfiguration = new ParserConfiguration();
+        parserConfiguration.setSymbolResolver(new JavaSymbolSolver(new CombinedTypeSolver(
+                new ReflectionTypeSolver(),
+                new JavaParserTypeSolver(startDir)
+        )));
+        javaParser = new JavaParser(parserConfiguration);
+
         // 遍历目录、读取所有文件
         FileSystemHelper.traverseDirectories(startDir, file -> {
             if (file.getName().matches(".*\\.java")) {
-                executor.submit(() -> {
-                    loadProjectThreads.addAndGet(1);
-                    var javaFile = loadFile(file);
-                    loadProjectThreads.addAndGet(-1);
-                });
+//                executor.submit(() -> {
+//                    loadProjectThreads.addAndGet(1);
+//                    try{
+//                    }finally {
+//                        loadProjectThreads.addAndGet(-1);
+//                    }
+//                });
+                var javaFile = loadFile(file);
             }
         });
 
-        // 等待遍历结束
-        do {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        } while (loadProjectThreads.get() > 0);
+//        // 等待遍历结束
+//        do {
+//            try {
+//                Thread.sleep(50);
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//        } while (loadProjectThreads.get() > 0);
 
         // 将缓存的Packages制作成Project
         return resolvePackages();
@@ -67,12 +87,13 @@ public class LoadProjectServiceImpl implements LoadProjectService {
 
     private JavaFile loadFile(File fileObj) {
         var file = new JavaFile();
+        file.setPath(fileObj.getAbsolutePath());
         file.setFileName(fileObj.getName());
 
         // 读入JavaParser
         CompilationUnit cu;
         try {
-            cu = StaticJavaParser.parse(fileObj);
+            cu = javaParser.parse(fileObj).getResult().orElseThrow();
         } catch (Exception e) {
             log.error("解析文件{}时出现异常：{}", fileObj.getName(), e.getMessage());
             throw new RuntimeException();
@@ -108,6 +129,7 @@ public class LoadProjectServiceImpl implements LoadProjectService {
         file.setClasses(cu.getChildNodes().stream()
                 .filter(node -> node instanceof ClassOrInterfaceDeclaration)
                 .map(node -> resolveJavaClasses(node, importDeclarationMap))
+                .peek(javaClass -> javaClass.setJavaFile(file))
                 .toList());
 
         return file;
@@ -137,6 +159,7 @@ public class LoadProjectServiceImpl implements LoadProjectService {
             method.setDeclaration(methodDeclaration);
             method.setName(methodDeclaration.getNameAsString());
             method.setClassReference(classRef);
+            method.setJavaClass(javaClass);
 
             var returnReference = methodDeclaration.getTypeAsString();
             if (importDeclarationMap.containsKey(returnReference)) {

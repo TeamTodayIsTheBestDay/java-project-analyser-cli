@@ -12,6 +12,7 @@ import team.todaybest.analyser.service.LoadProjectService;
 import team.todaybest.analyser.service.MethodService;
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * @author cineazhan
@@ -81,8 +82,9 @@ public class AnalysisServiceImpl implements AnalysisService {
         // 缓存项目的类，顺便记个时
         startTime = System.currentTimeMillis();
         methodService.makeMethodsMap(javaProject);
+        classesService.makeClassesMap(javaProject);
         endTime = System.currentTimeMillis();
-        System.out.printf("Successfully indexed methods in %dms.%n", endTime - startTime);
+        System.out.printf("Successfully indexed methods and classes in %dms.%n", endTime - startTime);
     }
 
     @Override
@@ -122,8 +124,27 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     @Override
-    public void functionRelationship(String classReference, String functionName) {
+    public void methodRelationship(String classReference, String methodName, int depth) {
+        if (javaProject == null) {
+            System.err.println("You haven't opened a project yet. Use \"open <path>\" to open one.");
+            return;
+        }
 
+        var javaClass = javaProject.getClassMap().get(classReference);
+        if (javaClass == null) {
+            System.err.printf("Class '%s' is not found.%n", classReference);
+            return;
+        }
+
+        var optMethod = javaClass.getMethods().stream().filter(javaMethod -> Objects.equals(javaMethod.getName(), methodName)).findFirst();
+        if (optMethod.isEmpty()) {
+            System.err.printf("Method '%s' is not found.%n", methodName);
+            return;
+        }
+
+        methodService.getInvokes(javaProject, optMethod.get());
     }
+
+
 
 }

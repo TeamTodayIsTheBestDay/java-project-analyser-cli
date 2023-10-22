@@ -10,5 +10,5 @@ public interface AnalysisService {
 
     void getInstances(String classReference);
 
-    void functionRelationship(String classReference, String functionName);
+    void methodRelationship(String classReference, String functionName, int depth);
 }

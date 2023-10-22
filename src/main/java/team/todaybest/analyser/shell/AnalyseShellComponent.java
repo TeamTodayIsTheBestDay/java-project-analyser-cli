@@ -4,6 +4,7 @@ import com.github.javaparser.StaticJavaParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellOption;
 import team.todaybest.analyser.service.AnalysisService;
 
 import java.io.IOException;
@@ -23,22 +24,30 @@ public class AnalyseShellComponent {
     }
 
     @ShellMethod("Open a project")
-    public void open(String path){
+    public void open(
+            @ShellOption(help = "The path to the root package of the source code.") String path
+    ) {
         analysisService.openProject(path);
     }
 
     @ShellMethod("List the packages, files, classes and interfaces of the project")
-    public void list(){
+    public void list() {
         analysisService.listProject();
     }
 
     @ShellMethod("Get all instances of a specified class.")
-    public void inst(String classReference){
+    public void inst(
+            @ShellOption(help = "The reference to the class.") String classReference
+    ) {
         analysisService.getInstances(classReference);
     }
 
     @ShellMethod("Show invoke relationships of a specified function.")
-    public void func(String classReference, String funcName){
+    public void func(
+            @ShellOption(help = "The reference to the class.") String classReference,
+            @ShellOption(help = "The name of the function.") String funcName,
+            @ShellOption(help = "The depth when searching for invoked relation.", defaultValue = "2") int depth) {
+        analysisService.methodRelationship(classReference, funcName, depth);
     }
 
     @ShellMethod("Test")
