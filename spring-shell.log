@@ -47,3 +47,18 @@
 1697971704364:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
 1697971710803:func org.apache.commons.lang3.StringUtils rotate
 1697972130910:func org.apache.commons.lang3.StringUtils isBlank
+1697975969076:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697975974464:func org.apache.commons.lang3.StringUtils rotate
+1697976031006:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697976036453:func org.apache.commons.lang3.StringUtils rotate
+1697976054659:func org.apache.commons.lang3.StringUtils isBlank
+1697976143318:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java\\\\
+1697976166848:func main.Test introduction
+1697976210798:func main.Test sayHello
+1697976998634:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697977013125:func main.Test sayHello
+1697977025096:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697977032530:func org.apache.commons.lang3.StringUtils isBlank
+1697977462784:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697977473143:func org.apache.commons.lang3.StringUtils isBlank 1
+1697977487847:func org.apache.commons.lang3.StringUtils isBlank 3
