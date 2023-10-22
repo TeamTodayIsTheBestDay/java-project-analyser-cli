@@ -4,13 +4,36 @@
 #show: project.with(
   title: "Java Project Analyser",
   authors: (
-    (name: "Zhang Yao", email: "yaoozhang@icloud.com"),
+    (name: "Zhang Yao", email: "zhang@cinea.cc"),
   ),
 )
 
+#outline(
+    title: "Table of Contents",
+    indent: 2em
+)
+
+#pagebreak()
+
 = Overview
 
-_To be done._
+== Team Members
+
+#table(
+    columns: (auto, auto, auto, auto),
+    inset: 10pt,
+    align: horizon,
+    [*Name*],[*Matr. No.*],[*Contact number*],[*Email address*],
+    [Zhang Yao],[2152955],[+86 13518772062],[zhang\@cinea.cc],
+    [Tang Shuhan],[],[],[],
+    [Wang Shuyu],[],[],[],
+    [Tang Kexian],[],[],[]
+)
+_No specific order in the table._
+
+== Description
+
+== Features
 
 = Usage
 
@@ -83,7 +106,17 @@ shell:>open /usr/src/sample-project/src/main/java
 
 = Design
 
+== System architecture and components
+
+== General workflow
+
 = Implementation
+
+== Major data structures
+
+== Efficiency considerations
+
+== Key techniques
 
 = Test
 
