@@ -1,6 +1,5 @@
 package team.todaybest.analyser.model;
 
-import com.github.javaparser.ast.PackageDeclaration;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -16,11 +15,18 @@ import java.util.Map;
 public class JavaProject {
     private List<JavaPackage> packages;
 
-    private Map<String,JavaMethod> methodMap;
+    private Map<String, JavaMethod> methodMap;
 
-    private Map<String,JavaClass> classMap;
+    private Map<String, JavaClass> classMap;
 
     public JavaProject() {
         this.packages = new ArrayList<>();
+    }
+
+    @Override
+    public String toString() {
+        return "JavaProject{" +
+                "classes(" + classMap.size() + ")" +
+                '}';
     }
 }

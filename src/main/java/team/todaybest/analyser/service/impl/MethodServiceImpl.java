@@ -172,4 +172,41 @@ public class MethodServiceImpl implements MethodService {
 
         return result;
     }
+
+    @Override
+    public void getInvokedBy(JavaProject project, JavaMethod method, MethodCallExprOperation operation) {
+        var tasks = new ArrayList<Future<?>>();
+
+        project.getClassMap().values().forEach(javaClass -> {
+            javaClass.getDeclaration().accept(new VoidVisitorAdapter<Object>() {
+                @Override
+                public void visit(MethodCallExpr expr, Object arg) {
+                    ResolvedMethodDeclaration methodDeclaration;
+                    try {
+                        methodDeclaration = expr.resolve();
+                    } catch (Exception e) {
+                        return;
+                    }
+                    var className = methodDeclaration.declaringType().getQualifiedName();
+                    var methodName = methodDeclaration.getName();
+
+                    if (Objects.equals(className, method.getClassReference()) && Objects.equals(methodName, method.getName())) {
+                        // 找到了一个调用方
+                        var task = executorService.submit(()-> operation.operate(expr));
+                        tasks.add(task);
+                    }
+                }
+            }, null);
+        });
+
+        // 等待遍历结束。
+        // 注意，不可换为增强for，因为增强for的遍历内容是固定的。
+        for (int i = 0; i < tasks.size(); i++) {
+            try {
+                tasks.get(i).get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }

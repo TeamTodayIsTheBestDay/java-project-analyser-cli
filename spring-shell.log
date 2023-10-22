@@ -62,3 +62,63 @@
 1697977462784:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
 1697977473143:func org.apache.commons.lang3.StringUtils isBlank 1
 1697977487847:func org.apache.commons.lang3.StringUtils isBlank 3
+1697990642370:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697990659502:func main.Test sayHello
+1697990672492:param main.Test sayHello
+1697990728866:help
+1697990743046:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697990747610:param main.Test sayHello
+1697990789550:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697990791596:param main.Test sayHello
+1697990876021:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697990879022:param main.Test sayHello
+1697991126816:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697991139142:param main.Test sayHello
+1697991359681:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697991363957:param main.Test sayHello
+1697991516080:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697991520757:param main.Test sayHello
+1697991638507:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697991641098:param main.Test sayHello
+1697991862621:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697991865239:param main.Test sayHello
+1697991909826:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697991911795:param main.Test sayHello
+1697992038183:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697992040366:param main.Test sayHello
+1697992093656:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697992096249:param main.Test sayHello
+1697992124238:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697992126405:param main.Test sayHello
+1697992632615:func org.apache.commons.lang3.StringUtils rotate
+1697992635549:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697992639023:param main.Test sayHello
+1697993587325:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697993590709:param main.Test sayHello
+1697993645380:func org.apache.commons.lang3.StringUtils rotate
+1697993648614:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697993650445:param main.Test sayHello
+1697993736619:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697993739046:param main.Test sayHello
+1697993821789:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697993826215:param main.Test sayHello
+1697993897479:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697993900279:param main.Test sayHello
+1697993994141:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697993996748:param main.Test sayHello
+1697994015978:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697994017965:param main.Test sayHello
+1697994066112:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697994166647:param org.apache.commons.lang3.StringUtils isBlank
+1697994219165:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697994224673:param org.apache.commons.lang3.StringUtils isBlank
+1697994249282:stacktrace
+1697994352140:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697994356933:param org.apache.commons.lang3.StringUtils isBlank
+1697994376592:stacktrace
+1697994401637:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697994405927:param org.apache.commons.lang3.StringUtils isBlank
+1697996399299:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1697996456190:param org.apache.commons.lang3.StringUtils isBlank
+1697996459483:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1697996464543:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java

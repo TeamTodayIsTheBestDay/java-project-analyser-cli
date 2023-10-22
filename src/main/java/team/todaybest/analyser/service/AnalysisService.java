@@ -11,4 +11,6 @@ public interface AnalysisService {
     void getInstances(String classReference);
 
     void methodRelationship(String classReference, String functionName, int depth);
+
+    void methodParameterOrigin(String classReference, String functionName, int depth);
 }

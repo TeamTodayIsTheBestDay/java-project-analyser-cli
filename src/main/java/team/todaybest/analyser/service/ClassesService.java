@@ -25,8 +25,4 @@ public interface ClassesService {
      */
     void makeClassesMap(JavaProject project);
 
-    /**
-     * 找到某个类
-     */
-    ClassOrInterfaceDeclaration searchClasses(String classReference, JavaProject project);
 }

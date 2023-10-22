@@ -46,14 +46,18 @@ public class AnalyseShellComponent {
     public void func(
             @ShellOption(help = "The reference to the class.") String classReference,
             @ShellOption(help = "The name of the function.") String funcName,
-            @ShellOption(help = "The depth when searching for invoked relation.", defaultValue = "2") int depth) {
+            @ShellOption(help = "The depth when searching for invoked relation.", defaultValue = "2") int depth
+    ) {
         analysisService.methodRelationship(classReference, funcName, depth);
     }
 
-    @ShellMethod("Test")
-    void testJp() throws IOException {
-        var unit = StaticJavaParser.parse(Path.of("D:\\IdeaProjects\\java-project-analyser-cli\\src\\main\\java\\team\\todaybest\\analyser\\service\\impl\\LoadProjectServiceImpl.java"));
-        var classShellC = unit.getClassByName("AnalyseShellComponent");
+    @ShellMethod("Show the parameter source chain of a specified function.")
+    public void param(
+            @ShellOption(help = "The reference to the class.") String classReference,
+            @ShellOption(help = "The name of the function.") String funcName,
+            @ShellOption(help = "The depth when searching for invoked relation.", defaultValue = "20") int depth
+    ) {
+        analysisService.methodParameterOrigin(classReference, funcName, depth);
     }
 
 }

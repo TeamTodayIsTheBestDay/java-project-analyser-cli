@@ -23,4 +23,11 @@ public class JavaFile {
     public JavaFile(){
         this.classes = new ArrayList<>();
     }
+
+    @Override
+    public String toString() {
+        return "JavaFile{" +
+                "packageName='" + packageName + '\'' +
+                '}';
+    }
 }
