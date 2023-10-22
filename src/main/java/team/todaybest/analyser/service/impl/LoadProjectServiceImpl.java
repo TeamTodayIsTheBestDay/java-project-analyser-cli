@@ -2,9 +2,7 @@ package team.todaybest.analyser.service.impl;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
@@ -13,13 +11,14 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Service;
-import team.todaybest.analyser.helper.interfaces.DirectoryTraverser;
 import team.todaybest.analyser.helper.FileSystemHelper;
 import team.todaybest.analyser.model.*;
 import team.todaybest.analyser.service.LoadProjectService;
 
-import java.io.File;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +36,11 @@ import java.util.stream.Collectors;
 @Service
 public class LoadProjectServiceImpl implements LoadProjectService {
     ExecutorService executor = Executors.newCachedThreadPool();
-    AtomicInteger loadProjectThreads = new AtomicInteger(0);
 
     // 线程安全的几个成员变量
     Map<String, JavaPackage> packageMap = new ConcurrentHashMap<>(); // 线程安全的Map
+
+    final Object lock = new Object();
 
     // 好东西
     JavaParser javaParser;
@@ -58,45 +58,59 @@ public class LoadProjectServiceImpl implements LoadProjectService {
         )));
         javaParser = new JavaParser(parserConfiguration);
 
-        // 遍历目录、读取所有文件
+        // 准备并发锁
+        AtomicInteger fileNum = new AtomicInteger();
         FileSystemHelper.traverseDirectories(startDir, file -> {
             if (file.getName().matches(".*\\.java")) {
-//                executor.submit(() -> {
-//                    loadProjectThreads.addAndGet(1);
-//                    try{
-//                    }finally {
-//                        loadProjectThreads.addAndGet(-1);
-//                    }
-//                });
-                var javaFile = loadFile(file);
+                fileNum.getAndIncrement();
             }
         });
 
-//        // 等待遍历结束
-//        do {
-//            try {
-//                Thread.sleep(50);
-//            } catch (InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
-//        } while (loadProjectThreads.get() > 0);
+        var latch = new CountDownLatch(fileNum.get());
+
+        // 遍历目录、读取所有文件
+        FileSystemHelper.traverseDirectories(startDir, file -> {
+            if (file.getName().matches(".*\\.java")) {
+                executor.submit(() -> {
+                    try {
+                        var javaFile = loadFile(file);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        latch.countDown();
+                    }
+                });
+            }
+        });
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         // 将缓存的Packages制作成Project
         return resolvePackages();
     }
 
-    private JavaFile loadFile(File fileObj) {
+    private JavaFile loadFile(File fileObj) throws IOException {
         var file = new JavaFile();
         file.setPath(fileObj.getAbsolutePath());
         file.setFileName(fileObj.getName());
 
+        // 发挥并发优势，在锁外读取文件
+        var reader = new BufferedInputStream(new FileInputStream(fileObj));
+        var fileContent = IOUtils.toString(reader, StandardCharsets.UTF_8);
+
         // 读入JavaParser
         CompilationUnit cu;
-        try {
-            cu = javaParser.parse(fileObj).getResult().orElseThrow();
-        } catch (Exception e) {
-            log.error("解析文件{}时出现异常：{}", fileObj.getName(), e.getMessage());
-            throw new RuntimeException();
+        synchronized (lock) {
+            try {
+                cu = javaParser.parse(fileContent).getResult().orElseThrow();
+            } catch (Exception e) {
+                log.error("解析文件{}时出现异常：{}", fileObj.getName(), e.getMessage());
+                throw new RuntimeException();
+            }
         }
 
         // 获取包信息

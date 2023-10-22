@@ -143,8 +143,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
 
         methodService.getInvokes(javaProject, optMethod.get());
+        methodService.getInvokedBy(javaProject, optMethod.get(), depth);
     }
-
 
 
 }
