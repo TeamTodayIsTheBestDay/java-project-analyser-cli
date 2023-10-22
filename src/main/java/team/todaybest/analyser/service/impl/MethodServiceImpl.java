@@ -6,6 +6,7 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import team.todaybest.analyser.model.JavaInvokeChain;
@@ -15,7 +16,10 @@ import team.todaybest.analyser.model.JavaProject;
 import team.todaybest.analyser.service.MethodService;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @author cinea
@@ -68,7 +72,6 @@ public class MethodServiceImpl implements MethodService {
                 var methodName = methodDeclaration.getName();
 
                 result.add(ImmutableList.of(className, methodName));
-                System.out.println(result);
 
                 super.visit(expr, arg);
             }
@@ -80,17 +83,19 @@ public class MethodServiceImpl implements MethodService {
     // 来点并发
     ExecutorService executorService = Executors.newCachedThreadPool();
 
+
     @Override
     public List<JavaInvokeChain> getInvokedBy(JavaProject project, JavaMethod method, int depth) {
         if (depth == 0) {
             return null;
         }
 
-        // 准备一个线程安全的缓存
-        Map<ImmutableList<String>, JavaInvokeChain> chainMap = new ConcurrentHashMap<>();
-
         var result = new ArrayList<JavaInvokeChain>();
         var tasks = new ArrayList<Future<?>>();
+
+        // 准备一个线程安全的缓存
+        Map<ImmutableList<String>, JavaInvokeChain> chainMap = new ConcurrentHashMap<>();
+        Set<ImmutableList<String>> visited = Sets.newConcurrentHashSet();
 
         project.getClassMap().values().forEach(javaClass -> {
             javaClass.getDeclaration().accept(new VoidVisitorAdapter<List<JavaInvokeChain>>() {
@@ -119,6 +124,13 @@ public class MethodServiceImpl implements MethodService {
                         var hostClassReference = containingClassOpt.get().getFullyQualifiedName().get();
                         var hostMethodName = containingMethodOpt.get().getNameAsString();
 
+                        // 去重
+                        if (visited.contains(ImmutableList.of(hostClassReference, hostMethodName))) {
+                            return;
+                        } else {
+                            visited.add(ImmutableList.of(hostClassReference, hostMethodName));
+                        }
+
                         if (chainMap.containsKey(ImmutableList.of(hostClassReference, hostMethodName))) {
                             resultArr.add(chainMap.get(ImmutableList.of(hostClassReference, hostMethodName)));
                             return;
@@ -135,7 +147,10 @@ public class MethodServiceImpl implements MethodService {
                         chain.setMethod(javaMethod);
 
                         if (depth > 0) {
-                            var task = executorService.submit(() -> chain.setInvokedBy(getInvokedBy(project, javaMethod, depth - 1)));
+                            var task = executorService.submit(() -> {
+                                chain.setInvokedBy(getInvokedBy(project, javaMethod, depth - 1));
+                                chainMap.put(ImmutableList.of(hostClassReference, hostMethodName), chain);
+                            });
                             tasks.add(task);
                         }
 
