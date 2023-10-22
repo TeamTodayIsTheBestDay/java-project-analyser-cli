@@ -1,7 +1,5 @@
 package team.todaybest.analyser.helper;
 
-import team.todaybest.analyser.helper.interfaces.DirectoryTraverser;
-
 import java.io.File;
 import java.util.Objects;
 
@@ -19,10 +17,15 @@ public class FileSystemHelper {
     public static void traverseDirectories(File startDir, DirectoryTraverser traverser) {
         for (var file : Objects.requireNonNull(startDir.listFiles())) {
             if (file.isFile()) {
-                traverser.process(file);
+                traverser.operate(file);
             } else if (file.isDirectory()) {
                 traverseDirectories(file, traverser);
             }
         }
+    }
+
+    @FunctionalInterface
+    public interface DirectoryTraverser {
+        void operate(File file);
     }
 }

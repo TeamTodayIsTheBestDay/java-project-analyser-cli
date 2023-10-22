@@ -1,6 +1,7 @@
 package team.todaybest.analyser.service;
 
 import com.google.common.collect.ImmutableList;
+import team.todaybest.analyser.model.JavaInvokeChain;
 import team.todaybest.analyser.model.JavaMethod;
 import team.todaybest.analyser.model.JavaProject;
 
@@ -25,4 +26,5 @@ public interface MethodService {
     /**
      * 获取调用基函数的函数，需要递归寻找整个调用链。
      */
+    List<JavaInvokeChain> getInvokedBy(JavaProject project, JavaMethod method, int depth);
 }

@@ -58,7 +58,7 @@ To start the compilation process, please execute the following command:
 ./mvnw -B package
 ```
 
-The first command will try to download all dependencies our project used from the Maven Central Repository. You may use Aliyun Maven Central Repository in China to accelerate the downloading process. Learn more about Aliyun Maven Central Repository: #link("https://developer.aliyun.com/mvn/guide",[https://developer.aliyun.com/mvn/guide]). 
+The first command will try to download all dependencies our project used from the Maven Central Repository. You may use Aliyun Maven Central Repository in China to accelerate the downloading process. Learn more about Aliyun Maven Central Repository: #link("https://developer.aliyun.com/mvn/guide",[https://developer.aliyun.com/mvn/guide]).
 
 After finishing the compilation, you may find the artifact in `target` directory, which looks like `java-project-analyser-cli-0.0.1-SNAPSHOT.jar`. You may move the output to a convenient location and change its name as needed. Assuming we have renamed it to `analyser.jar` in convience in the following parts.
 
@@ -96,7 +96,7 @@ shell:>open /usr/src/sample-project/src/main/java
 
 - The path should contain the root package, but not the root package self.
 - On Windows, please double the backslashes in the path or change them to forward slashes. For example, both `C:/commons-lang/src/main/java` and `C:\\commons-lang\\src\\main\\java` are correct.
-- The process of opening the project should be completed within one second, and it should not exceed ten seconds at most. In our test, open a huge project with 200 classes and 3000 methods usually cost about 3 seconds.
+- The process of opening the project should be completed within one second, and it should not exceed ten seconds at most. In our test, open a huge project with 200 classes and 3000 methods usually cost about 2 seconds.
 
 == Querying method invocation relationships
 

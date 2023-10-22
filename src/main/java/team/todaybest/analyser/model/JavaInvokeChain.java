@@ -2,6 +2,8 @@ package team.todaybest.analyser.model;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 调用链
  *
@@ -9,4 +11,6 @@ import lombok.Data;
  */
 @Data
 public class JavaInvokeChain {
+    private JavaMethod method;
+    private List<JavaInvokeChain> invokedBy;
 }
