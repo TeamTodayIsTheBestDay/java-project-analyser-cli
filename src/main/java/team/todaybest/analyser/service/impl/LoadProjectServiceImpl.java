@@ -14,15 +14,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.stereotype.Service;
 import team.todaybest.analyser.helper.FileSystemHelper;
+import team.todaybest.analyser.helper.IncompleteCodeHelper;
 import team.todaybest.analyser.model.*;
 import team.todaybest.analyser.service.LoadProjectService;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -101,6 +108,12 @@ public class LoadProjectServiceImpl implements LoadProjectService {
         // 发挥并发优势，在锁外读取文件
         var reader = new BufferedInputStream(new FileInputStream(fileObj));
         var fileContent = IOUtils.toString(reader, StandardCharsets.UTF_8);
+
+        // 检查简单的语法错误
+        var syntaxOk = IncompleteCodeHelper.reviewCode(fileContent, fileObj.getAbsolutePath());
+        if (!syntaxOk) {
+            throw new RuntimeException("Syntax Error Found. Please review your code and retry.");
+        }
 
         // 读入JavaParser
         CompilationUnit cu;

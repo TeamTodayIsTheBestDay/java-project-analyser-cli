@@ -215,22 +215,4 @@ public class ClassesServiceImpl implements ClassesService {
             searchInstancesInNodes(className, childNode, methodDeclaration, result);
         });
     }
-
-    @ShellComponent("Test Classes Service")
-    static class ClassServiceTestProvider {
-        @ShellMethod("Spring Shell命令必须具有非空描述")
-        void test() throws IOException {
-            var cu = StaticJavaParser.parse(Path.of("D:\\IdeaProjects\\java-project-analyser-cli\\src\\main\\java\\team\\todaybest\\analyser\\service\\impl\\ClassesServiceImpl.java"));
-            var clz = cu.getClassByName("ClassesServiceImpl");
-            var res = new ClassesServiceImpl().searchInstancesInClasses("ArrayList<ClassInstance>", clz.get());
-            System.out.println(res.size());
-        }
-    }
-
-    @Override
-    public ClassOrInterfaceDeclaration searchClasses(String classReference, JavaProject project) {
-
-
-        return null;
-    }
 }

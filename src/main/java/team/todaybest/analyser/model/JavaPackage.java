@@ -1,6 +1,5 @@
 package team.todaybest.analyser.model;
 
-import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.PackageDeclaration;
 import lombok.Data;
 
@@ -20,8 +19,15 @@ public class JavaPackage {
     private List<JavaPackage> childrenPackages;
     private JavaPackage parentPackage;
 
-    public JavaPackage(){
+    public JavaPackage() {
         this.files = new ArrayList<>();
         this.childrenPackages = new ArrayList<>();
+    }
+
+    @Override
+    public String toString() {
+        return "JavaPackage{" +
+                "packageDeclaration=" + packageDeclaration.getNameAsString() +
+                '}';
     }
 }

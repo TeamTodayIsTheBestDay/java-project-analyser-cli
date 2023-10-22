@@ -7,11 +7,10 @@ import team.todaybest.analyser.helper.ProjectListHelper;
 import team.todaybest.analyser.helper.ProjectStatisticsHelper;
 import team.todaybest.analyser.helper.ShellHelper;
 import team.todaybest.analyser.model.JavaInvokeChain;
+import team.todaybest.analyser.model.JavaMethod;
+import team.todaybest.analyser.model.JavaParameterOrigin;
 import team.todaybest.analyser.model.JavaProject;
-import team.todaybest.analyser.service.AnalysisService;
-import team.todaybest.analyser.service.ClassesService;
-import team.todaybest.analyser.service.LoadProjectService;
-import team.todaybest.analyser.service.MethodService;
+import team.todaybest.analyser.service.*;
 
 import java.io.File;
 import java.util.List;
@@ -217,5 +216,86 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
     }
 
+    ParameterService parameterService;
 
+    @Autowired
+    public void setParameterService(ParameterService parameterService) {
+        this.parameterService = parameterService;
+    }
+
+    @Override
+    public void methodParameterOrigin(String classReference, String functionName, int depth) {
+        if (javaProject == null) {
+            System.err.println("You haven't opened a project yet. Use \"open <path>\" to open one.");
+            return;
+        }
+
+        var javaClass = javaProject.getClassMap().get(classReference);
+        if (javaClass == null) {
+            System.err.printf("Class '%s' is not found.%n", classReference);
+            return;
+        }
+
+        var optMethod = javaClass.getMethods().stream()
+                .filter(javaMethod -> Objects.equals(javaMethod.getName(), functionName)).findFirst();
+        if (optMethod.isEmpty()) {
+            System.err.printf("Method '%s' is not found.%n", functionName);
+            return;
+        }
+
+        // 打开友好提示
+        var waitThread = new ShellHelper.PleaseWaitThread();
+        waitThread.start();
+
+        long startTime, endTime;
+
+        var javaMethod = optMethod.get();
+        startTime = System.currentTimeMillis();
+        var result = parameterService.getParameterOrigin(javaProject, javaMethod, depth);
+        endTime = System.currentTimeMillis();
+
+        // 关闭友好提示
+        waitThread.missionFinish = true;
+        try {
+            waitThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        printParameterOrigin(result, javaMethod);
+        System.out.printf("%nTime cost: %d ms%n", endTime - startTime);
+    }
+
+    private void printParameterOrigin(List<List<JavaParameterOrigin>> origin, JavaMethod javaMethod) {
+        var parameters = javaMethod.getDeclaration().getParameters();
+
+        System.out.println("***********Parameter Origin***********");
+
+        for (int j = 0; j < parameters.size(); j++) {
+            System.out.printf("\t%s %s:%n", parameters.get(j).getType().asString(), parameters.get(j).getNameAsString());
+            for (int i = 0; i < origin.size(); i++) {
+
+                var parameterOrigin = origin.get(i).get(j);
+                var valueChain = parameterOrigin.getOriginChain();
+
+//                System.out.println("\t\t\t[");
+
+                System.out.print("\t\t\t  ");
+
+                for (int k = 0; k < valueChain.size(); k++) {
+                    if (k > 0) {
+                        System.out.print("\t\t\t\t <- ");
+                    }
+
+                    var value = valueChain.get(k);
+                    System.out.printf("%s: (%s) %s%n", value.getName(), value.getMethod().getClassReference(), value.getMethod().getName());
+                }
+
+//                System.out.println("\t\t\t]");
+
+            }
+        }
+
+        System.out.println("**************************************");
+    }
 }

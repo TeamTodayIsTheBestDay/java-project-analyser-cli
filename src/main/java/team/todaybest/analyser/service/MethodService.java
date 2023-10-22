@@ -1,5 +1,6 @@
 package team.todaybest.analyser.service;
 
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.google.common.collect.ImmutableList;
 import team.todaybest.analyser.model.JavaInvokeChain;
 import team.todaybest.analyser.model.JavaMethod;
@@ -27,4 +28,14 @@ public interface MethodService {
      * 获取调用基函数的函数，需要递归寻找整个调用链。
      */
     List<JavaInvokeChain> getInvokedBy(JavaProject project, JavaMethod method, int depth);
+
+    /**
+     * 获取调用基函数的函数，不递归查找，指定找到的行为。
+     */
+    void getInvokedBy(JavaProject project, JavaMethod method, MethodCallExprOperation operation);
+
+    @FunctionalInterface
+    interface MethodCallExprOperation{
+        void operate(MethodCallExpr expr);
+    }
 }

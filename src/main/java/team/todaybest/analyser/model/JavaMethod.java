@@ -22,4 +22,12 @@ public class JavaMethod {
      */
     private String returnClassReference;
     private String name;
+
+    @Override
+    public String toString() {
+        return "JavaMethod{" +
+                "classReference='" + classReference + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

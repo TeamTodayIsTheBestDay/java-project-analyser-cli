@@ -1,5 +1,8 @@
 package team.todaybest.analyser.model;
 
+import lombok.Data;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -7,7 +10,11 @@ import java.util.List;
  *
  * @author cinea
  */
+@Data
 public class JavaParameterOrigin {
-    private String parameterName;
     private List<JavaValue> originChain;
+
+    public JavaParameterOrigin(){
+        originChain = new ArrayList<>();
+    }
 }
