@@ -27,7 +27,7 @@
     [Zhang Yao],[2152955],[+86 13518772062],[zhang\@cinea.cc],
     [Tang Shuhan],[2153877],[+86 15300862015],[2405353202\@qq.com],
     [Wang Shuyu],[2151894],[+86 17709584390],[1491456253\@qq.com],
-    [Tang Kexian],[],[],[]
+    [Tang Kexian],[2152240],[+86 18707016886],[1135530278\qq.com]
 )
 _No specific order in the table._
 
