@@ -17,7 +17,17 @@ public interface MethodService {
     /**
      * 将读取出的项目的Methods缓存到一个Map中，提高后续速度。
      */
-    void makeMethodsMap(JavaProject project);
+    void makeMethodsTrie(JavaProject project);
+
+    /**
+     * 找到指定函数的所有重载项
+     */
+    List<String> getAllOverloads(JavaProject project, String classReference, String methodName);
+
+    /**
+     * 找到指定函数的所有重载项
+     */
+    List<String> getAllOverloads(JavaProject project, String methodReference);
 
     /**
      * 获取基函数所调用的函数们
@@ -35,7 +45,7 @@ public interface MethodService {
     void getInvokedBy(JavaProject project, JavaMethod method, MethodCallExprOperation operation);
 
     @FunctionalInterface
-    interface MethodCallExprOperation{
+    interface MethodCallExprOperation {
         void operate(MethodCallExpr expr);
     }
 }

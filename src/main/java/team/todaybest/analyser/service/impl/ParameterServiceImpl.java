@@ -1,7 +1,6 @@
 package team.todaybest.analyser.service.impl;
 
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
@@ -193,16 +192,14 @@ public class ParameterServiceImpl implements ParameterService {
 
     private Optional<JavaMethod> getMethodFromAstNode(Node node, JavaProject javaProject) {
         var optMethod = node.findAncestor(MethodDeclaration.class);
-        var optClass = node.findAncestor(ClassOrInterfaceDeclaration.class);
-        if (optMethod.isEmpty() || optClass.isEmpty()) {
+
+        if (optMethod.isEmpty()){
             return Optional.empty();
         }
 
-        if (optClass.get().getFullyQualifiedName().isEmpty()) {
-            return Optional.empty();
-        }
+        var resolved = optMethod.get().resolve();
 
-        var javaMethod = javaProject.getMethodMap().get(optClass.get().getFullyQualifiedName().get() + "." + optMethod.get().getName());
+        var javaMethod = javaProject.getMethodTrie().get(resolved.getQualifiedSignature());
         return Optional.ofNullable(javaMethod);
     }
 }

@@ -57,22 +57,17 @@ public class AnalysisServiceImpl implements AnalysisService {
             return;
         }
 
-        var waitThread = new ShellHelper.PleaseWaitThread();
-        waitThread.start();
-
         // 打开项目，顺便记个时
         var startTime = System.currentTimeMillis();
         javaProject = loadProjectService.loadProject(dir);
+
+        methodService.makeMethodsTrie(javaProject);
+        classesService.makeClassesMap(javaProject);
+
+        loadProjectService.makeInvokeIndex(javaProject);
         var endTime = System.currentTimeMillis();
 
         var statics = ProjectStatisticsHelper.doStatistics(javaProject);
-
-        waitThread.missionFinish = true;
-        try {
-            waitThread.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
 
         System.out.println("\nOpen project success: ");
         System.out.printf("                       %d packages found.%n", statics.getPackageCount());
@@ -80,13 +75,6 @@ public class AnalysisServiceImpl implements AnalysisService {
         System.out.printf("                       %d classes and interfaces found.%n", statics.getClassAndInterfaceCount());
         System.out.printf("                       %d methods found.%n", statics.getMethodsCount());
         System.out.printf("                       %dms used.%n", endTime - startTime);
-
-        // 缓存项目的类，顺便记个时
-        startTime = System.currentTimeMillis();
-        methodService.makeMethodsMap(javaProject);
-        classesService.makeClassesMap(javaProject);
-        endTime = System.currentTimeMillis();
-        System.out.printf("Successfully indexed methods and classes in %dms.%n", endTime - startTime);
     }
 
     @Override
@@ -133,17 +121,16 @@ public class AnalysisServiceImpl implements AnalysisService {
             return;
         }
 
-        var javaClass = javaProject.getClassMap().get(classReference);
-        if (javaClass == null) {
-            System.err.printf("Class '%s' is not found.%n", classReference);
+        JavaMethod javaMethod;
+        var candidates = methodService.getAllOverloads(javaProject,classReference,methodName);
+        if(candidates.isEmpty()){
+            System.err.println("No method found with specific class and name.");
             return;
-        }
-
-        var optMethod = javaClass.getMethods().stream()
-                .filter(javaMethod -> Objects.equals(javaMethod.getName(), methodName)).findFirst();
-        if (optMethod.isEmpty()) {
-            System.err.printf("Method '%s' is not found.%n", methodName);
-            return;
+        } else if (candidates.size()==1) {
+            javaMethod = javaProject.getMethodTrie().get(candidates.get(0));
+        }else {
+            var k = ShellHelper.consoleChooseOne(candidates);
+            javaMethod = javaProject.getMethodTrie().get(candidates.get(k));
         }
 
         if (depth > 2) {
@@ -157,12 +144,12 @@ public class AnalysisServiceImpl implements AnalysisService {
         long startTime, endTime;
 
         startTime = System.currentTimeMillis();
-        var invokes = methodService.getInvokes(javaProject, optMethod.get());
+        var invokes = methodService.getInvokes(javaProject, javaMethod);
         endTime = System.currentTimeMillis();
         var getInvokesTime = endTime - startTime;
 
         startTime = System.currentTimeMillis();
-        var invoked = methodService.getInvokedBy(javaProject, optMethod.get(), depth);
+        var invoked = methodService.getInvokedBy(javaProject, javaMethod, depth);
         endTime = System.currentTimeMillis();
         var getInvokedByTime = endTime - startTime;
 

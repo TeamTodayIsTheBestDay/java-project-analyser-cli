@@ -5,17 +5,24 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import lombok.extern.slf4j.Slf4j;
+import me.tongfei.progressbar.ProgressBar;
+import me.tongfei.progressbar.ProgressBarBuilder;
+import me.tongfei.progressbar.ProgressBarStyle;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import team.todaybest.analyser.helper.FileSystemHelper;
 import team.todaybest.analyser.helper.IncompleteCodeHelper;
 import team.todaybest.analyser.model.*;
+import team.todaybest.analyser.service.ImportService;
 import team.todaybest.analyser.service.LoadProjectService;
 
 import java.io.BufferedInputStream;
@@ -42,15 +49,22 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class LoadProjectServiceImpl implements LoadProjectService {
-    ExecutorService executor = Executors.newCachedThreadPool();
+    ExecutorService executor = Executors.newFixedThreadPool(4);
 
     // 线程安全的几个成员变量
     Map<String, JavaPackage> packageMap = new ConcurrentHashMap<>(); // 线程安全的Map
 
+    // 锁
     final Object lock = new Object();
 
-    // 好东西
     JavaParser javaParser;
+
+    ImportService importService;
+
+    @Autowired
+    public void setImportService(ImportService importService) {
+        this.importService = importService;
+    }
 
     @Override
     public JavaProject loadProject(File startDir) {
@@ -73,31 +87,86 @@ public class LoadProjectServiceImpl implements LoadProjectService {
             }
         });
 
-        var latch = new CountDownLatch(fileNum.get());
+        try (var pb = new ProgressBarBuilder()
+                .setTaskName("Resolving")
+                .setInitialMax(fileNum.get())
+                .setStyle(ProgressBarStyle.ASCII)
+                .setMaxRenderedLength(80)
+                .setUpdateIntervalMillis(60)
+                .build()) {
+            var latch = new CountDownLatch(fileNum.get());
 
-        // 遍历目录、读取所有文件
-        FileSystemHelper.traverseDirectories(startDir, file -> {
-            if (file.getName().matches(".*\\.java")) {
-                executor.submit(() -> {
-                    try {
-                        var javaFile = loadFile(file);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    } finally {
-                        latch.countDown();
-                    }
-                });
+            // 遍历目录、读取所有文件
+            FileSystemHelper.traverseDirectories(startDir, file -> {
+                if (file.getName().matches(".*\\.java")) {
+                    executor.submit(() -> {
+                        try {
+                            var javaFile = loadFile(file);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        } finally {
+                            pb.step();
+                            latch.countDown();
+                        }
+                    });
+                }
+            });
+
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-        });
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
 
         // 将缓存的Packages制作成Project
         return resolvePackages();
+    }
+
+    @Override
+    public void makeInvokeIndex(JavaProject project) {
+        // 初始化
+        var map = new ConcurrentHashMap<String, List<MethodCallExpr>>();
+
+        var pbb = new ProgressBarBuilder()
+                .setTaskName("Indexing")
+                .setStyle(ProgressBarStyle.ASCII)
+                .setUpdateIntervalMillis(60)
+                .setMaxRenderedLength(80);
+
+        for (var javaMethod : ProgressBar.wrap(project.getMethodTrie().values(), pbb)) {
+            try {
+                var imports = javaMethod.getJavaClass().getJavaFile().getCompilationUnit().getImports();
+                javaMethod.getDeclaration().accept(new VoidVisitorAdapter<Object>() {
+                    @Override
+                    public void visit(MethodCallExpr expr, Object arg) {
+                        // do nothing, just see how performance is
+                        try {
+                            resolveMethodCallExpr(expr, map, project);
+                        } catch (Exception e) {
+                            return;
+                        }
+                    }
+                }, null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        project.setInvokedRelation(map);
+    }
+
+    private void resolveMethodCallExpr(MethodCallExpr expr, Map<String, List<MethodCallExpr>> map, JavaProject javaProject) {
+        var resolved = expr.resolve();
+
+        if (!javaProject.getClassMap().containsKey(resolved.declaringType().getId())) {
+            // 非本项目的方法
+            return;
+        }
+
+        var signature = resolved.getQualifiedSignature();
+        map.getOrDefault(signature, new ArrayList<>()).add(expr);
+
     }
 
     private JavaFile loadFile(File fileObj) throws IOException {
@@ -172,27 +241,24 @@ public class LoadProjectServiceImpl implements LoadProjectService {
     private JavaClass resolveJavaClasses(Node node, Map<String, String> importDeclarationMap) {
         assert node instanceof ClassOrInterfaceDeclaration;
         var declaration = (ClassOrInterfaceDeclaration) node;
+        var resolved = declaration.resolve();
 
         var javaClass = new JavaClass();
 
-        assert declaration.getFullyQualifiedName().isPresent(); // 暴躁老哥，在线assert（懒鬼是这样的）
-        var classRef = declaration.getFullyQualifiedName().get();
         javaClass.setDeclaration(declaration);
-        javaClass.setClassReference(classRef);
+        javaClass.setClassReference(resolved.getQualifiedName());
 
         // 扫描其中的方法
         javaClass.setMethods(declaration.getMethods().stream().map(methodDeclaration -> {
+            var resolvedMethod = methodDeclaration.resolve();
             var method = new JavaMethod();
+
             method.setDeclaration(methodDeclaration);
             method.setName(methodDeclaration.getNameAsString());
-            method.setClassReference(classRef);
+            method.setClassReference(javaClass.getClassReference());
             method.setJavaClass(javaClass);
 
-            var returnReference = methodDeclaration.getTypeAsString();
-            if (importDeclarationMap.containsKey(returnReference)) {
-                returnReference = importDeclarationMap.get(returnReference);
-            }
-            method.setReturnClassReference(returnReference);
+            method.setQualifiedSignature(resolvedMethod.getQualifiedSignature());
 
             return method;
         }).toList());

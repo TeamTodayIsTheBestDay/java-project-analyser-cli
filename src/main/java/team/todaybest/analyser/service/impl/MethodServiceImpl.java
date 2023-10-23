@@ -1,6 +1,5 @@
 package team.todaybest.analyser.service.impl;
 
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -8,7 +7,9 @@ import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import team.todaybest.analyser.model.JavaInvokeChain;
 import team.todaybest.analyser.model.JavaMethod;
 import team.todaybest.analyser.model.JavaPackage;
@@ -28,15 +29,25 @@ import java.util.concurrent.Future;
 @Service
 public class MethodServiceImpl implements MethodService {
     @Override
-    public void makeMethodsMap(JavaProject project) {
-        var map = new HashMap<String, JavaMethod>();
+    public void makeMethodsTrie(JavaProject project) {
+        var map = new PatriciaTrie<JavaMethod>();
         project.getPackages().forEach(javaPackage -> {
-            traverseMethodsRecursive(javaPackage, javaMethod -> map.put(
-                    javaMethod.getClassReference() + "." + javaMethod.getName(),
-                    javaMethod
-            ));
+            traverseMethodsRecursive(javaPackage, javaMethod -> map.put(javaMethod.getQualifiedSignature(), javaMethod));
         });
-        project.setMethodMap(map);
+        project.setMethodTrie(map);
+    }
+
+    @Override
+    public List<String> getAllOverloads(JavaProject project, String classReference, String methodName) {
+        return getAllOverloads(project, classReference + '.' + methodName);
+    }
+
+    @Override
+    public List<String> getAllOverloads(JavaProject project, String methodReference) {
+        var searchString = methodReference + '(';
+        var searchResult = project.getMethodTrie().prefixMap(searchString);
+
+        return new ArrayList<>(searchResult.keySet());
     }
 
     private void traverseMethodsRecursive(JavaPackage javaPackage, TraverseMethodsAction traverseMethodsAction) {
@@ -80,10 +91,6 @@ public class MethodServiceImpl implements MethodService {
         return result.stream().toList();
     }
 
-    // 来点并发
-    ExecutorService executorService = Executors.newCachedThreadPool();
-
-
     @Override
     public List<JavaInvokeChain> getInvokedBy(JavaProject project, JavaMethod method, int depth) {
         if (depth == 0) {
@@ -94,81 +101,51 @@ public class MethodServiceImpl implements MethodService {
         var tasks = new ArrayList<Future<?>>();
 
         // 准备一个线程安全的缓存
-        Map<ImmutableList<String>, JavaInvokeChain> chainMap = new ConcurrentHashMap<>();
-        Set<ImmutableList<String>> visited = Sets.newConcurrentHashSet();
+        Map<String, JavaInvokeChain> chainMap = new ConcurrentHashMap<>();
+        Set<String> visited = Sets.newConcurrentHashSet();
 
-        project.getClassMap().values().forEach(javaClass -> {
-            javaClass.getDeclaration().accept(new VoidVisitorAdapter<List<JavaInvokeChain>>() {
-                @Override
-                public void visit(MethodCallExpr expr, List<JavaInvokeChain> resultArr) {
-                    ResolvedMethodDeclaration methodDeclaration;
-                    try {
-                        methodDeclaration = expr.resolve();
-                    } catch (Exception e) {
-                        return;
-                    }
-                    var className = methodDeclaration.declaringType().getQualifiedName();
-                    var methodName = methodDeclaration.getName();
+        project.getInvokedRelation().get(method.getQualifiedSignature()).forEach(expr -> {
+            // 找到了一个调用方
 
-                    if (Objects.equals(className, method.getClassReference()) && Objects.equals(methodName, method.getName())) {
-                        // 找到了一个调用方
+            // 寻找其所位于的方法
+            var containingMethodOpt = expr.findAncestor(MethodDeclaration.class);
 
-                        // 寻找其所位于的方法
-                        var containingMethodOpt = expr.findAncestor(MethodDeclaration.class);
-                        var containingClassOpt = expr.findAncestor(ClassOrInterfaceDeclaration.class);
-
-                        if (containingMethodOpt.isEmpty() || containingClassOpt.isEmpty() || containingClassOpt.get().getFullyQualifiedName().isEmpty()) {
-                            return;
-                        }
-
-                        var hostClassReference = containingClassOpt.get().getFullyQualifiedName().get();
-                        var hostMethodName = containingMethodOpt.get().getNameAsString();
-
-                        // 去重
-                        if (visited.contains(ImmutableList.of(hostClassReference, hostMethodName))) {
-                            return;
-                        } else {
-                            visited.add(ImmutableList.of(hostClassReference, hostMethodName));
-                        }
-
-                        if (chainMap.containsKey(ImmutableList.of(hostClassReference, hostMethodName))) {
-                            resultArr.add(chainMap.get(ImmutableList.of(hostClassReference, hostMethodName)));
-                            return;
-                        }
-
-                        var javaMethod = project.getMethodMap().get(hostClassReference + "." + hostMethodName);
-                        if (javaMethod == null) {
-                            // 出现严重异常
-                            log.warn("严重异常：{}类{}方法被遍历到，但不在预编译的索引中", hostClassReference, hostMethodName);
-                            return;
-                        }
-
-                        var chain = new JavaInvokeChain();
-                        chain.setMethod(javaMethod);
-
-                        if (depth > 0) {
-                            var task = executorService.submit(() -> {
-                                chain.setInvokedBy(getInvokedBy(project, javaMethod, depth - 1));
-                                chainMap.put(ImmutableList.of(hostClassReference, hostMethodName), chain);
-                            });
-                            tasks.add(task);
-                        }
-
-                        resultArr.add(chain);
-                    }
-                }
-            }, result);
-        });
-
-        // 等待遍历结束。
-        // 注意，不可换为增强for，因为增强for的遍历内容是固定的。
-        for (int i = 0; i < tasks.size(); i++) {
-            try {
-                tasks.get(i).get();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            if (containingMethodOpt.isEmpty()) {
+                return;
             }
-        }
+
+            var hostMethodResolved = containingMethodOpt.get().resolve();
+            var hostMethod = hostMethodResolved.declaringType().getId() + '.' + containingMethodOpt.get().getSignature().toString();
+
+            // 去重
+            if (visited.contains(hostMethod)) {
+                return;
+            } else {
+                visited.add(hostMethod);
+            }
+
+            if (chainMap.containsKey(hostMethod)) {
+                resultArr.add(chainMap.get(hostMethod));
+                return;
+            }
+
+            var javaMethod = project.getMethodTrie().get(hostMethod);
+            if (javaMethod == null) {
+                // 出现严重异常
+                log.warn("严重异常：{}方法被遍历到，但不在预编译的索引中", hostMethod);
+                return;
+            }
+
+            var chain = new JavaInvokeChain();
+            chain.setMethod(javaMethod);
+
+            if (depth > 0) {
+                chain.setInvokedBy(getInvokedBy(project, javaMethod, depth - 1));
+                chainMap.put(hostMethod, chain);
+            }
+
+            resultArr.add(chain);
+        });
 
         return result;
     }
@@ -192,7 +169,7 @@ public class MethodServiceImpl implements MethodService {
 
                     if (Objects.equals(className, method.getClassReference()) && Objects.equals(methodName, method.getName())) {
                         // 找到了一个调用方
-                        var task = executorService.submit(()-> operation.operate(expr));
+                        var task = executorService.submit(() -> operation.operate(expr));
                         tasks.add(task);
                     }
                 }
