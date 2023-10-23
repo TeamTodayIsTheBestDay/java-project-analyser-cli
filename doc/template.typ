@@ -5,7 +5,7 @@
   // Set the document's basic properties.
   set document(author: authors.map(a => a.name), title: title)
   set page(numbering: "1", number-align: center)
-  set text(font: ("Linux Libertine", "Noto Serif CJK SC"), lang: "zh")
+  set text(font: ("Linux Libertine", "Noto Serif CJK SC"), lang: "en")
 
   set text(size: 1.1em)
 
@@ -28,7 +28,7 @@
       columns: (1fr,) * calc.min(3, authors.len()),
       gutter: 1em,
       ..authors.map(author => align(start)[
-        *#author.name* \
+        Team Leader: *#author.name* \
         #author.email \
         \
         Tongji University

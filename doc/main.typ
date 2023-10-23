@@ -11,12 +11,12 @@
 #outline(
     title: "Table of Contents",
     indent: 2em
-)
+) 
 
 #pagebreak()
 
 = Overview
-
+ 
 == Team Members
 
 #table(
@@ -33,7 +33,24 @@ _No specific order in the table._
 
 == Description
 
+This project offers analysis functionality for Java projects. Users can conveniently obtain the call relationship of specified methods in a project using the software provided by this project. This includes a list of methods that a given method calls, as well as a list of methods that call the given method. The software can also trace call chains to a specified depth. Additionally, it provides tracking for the sources of function arguments within a method, assisting users in locating the origins of these arguments. If the arguments are provided in the form of literals, the software will also directly provide their values.
+
 == Features
+
+Here is a feature list which is implemented by our team: 
+
+- REPL-style command-line interaction
+- Import and organize Java projects according to package structure
+- Import large-scale Java projects within an acceptable timeframe
+- Check for the presence of syntax errors when importing projects
+- Parallelize reading, importing, and analyzing projects
+- Provide user-friendly output for time-consuming operations
+- List all files, classes and interfaces, and methods in the project
+- List all instances of a specific class within the project
+- Find all other methods called by a specified method
+- Identify all instances where a specific method is called within the project
+- Trace all methods that could potentially call a specified method
+- Locate and trace all possible argument sources for a specified method and provide values for literal argument sources.
 
 = Usage
 
@@ -98,15 +115,111 @@ shell:>open /usr/src/sample-project/src/main/java
 - On Windows, please double the backslashes in the path or change them to forward slashes. For example, both `C:/commons-lang/src/main/java` and `C:\\commons-lang\\src\\main\\java` are correct.
 - The process of opening the project should be completed within one second, and it should not exceed ten seconds at most. In our test, open a huge project with 200 classes and 3000 methods usually cost about 2 seconds.
 
+Example output:
+
+```
+shell:>open D:\\java-project-analyser-sample\\src\\main\\java
+Please wait.
+Open project success: 
+                       1 packages found.
+                       1 files found.
+                       1 classes and interfaces found.
+                       3 methods found.
+                       3ms used.
+Successfully indexed methods and classes in 0ms.
+```
+
 == Querying method invocation relationships
 
-== Querying method parameter relationships
+Use `func` command to query the method invocation relationships of a specified method:
+
+```shell-unix-generic
+shell:>func <class reference> <method name> <optional: searching deepth>
+```
+
+For example:
+
+```shell-unix-generic
+shell:>func main.Test sayHello
+```
+
+Example output:
+
+```
+shell:>func main.Test sayHello
+Please wait.
+****************** Invokes ******************
+	->(java.io.PrintStream) println
+*********************************************
+
+****************** Invoked by ******************
+	<-(main.Test) introduction
+			<-(main.Test) main
+	<-(main.Test) main
+************************************************
+
+Time cost:
+		Get Invokes: 4 ms
+		Get Invoked: 6 ms
+```
+
+== Querying method parameter sources
+
+Use `param` command to query the parameter sources of a specified method:
+
+```shell-unix-generic
+shell:>param <class reference> <method name> <optional: searching deepth>
+```
+
+For example:
+
+```shell-unix-generic
+shell:>func main.Test sayHello
+```
+
+Example output:
+
+```
+shell:>param main.Test sayHello
+Please wait.
+***********Parameter Origin***********
+	String name:
+			  "Garfield": (main.Test) introduction
+			  "Jon": (main.Test) sayHello
+			  name1: (main.Test) introduction
+				 <- "Odie": (main.Test) main
+**************************************
+
+Time cost: 2 ms
+```
 
 == Automaticly fixing syntax errors
+
+_to be implemented_
 
 = Design
 
 == System architecture and components
+
+Our system is built on top of the Spring Boot framework. We utilize the *Spring Framework* to organize and manage the lifecycle of Beans and dependency injection. We employ Spring Shell to create an easy-to-use interactive command-line interface.
+
+Specifically, our system is mainly divided into the following parts: 
+
+- *Service interfaces and their implementations*, which are responsible for providing the core functions of the project, such as importing the project, parsing the method call relationships, and tracing back the sources of parameters.
+  
+- *Model classes*, which are the data structures used by the core business of the project. They abstract and model business information and store this information.
+  
+- *Helper classes*, which are tools used during the execution of the project's core business. They operate without any state, provide only static services, and are not instantiated into class instances.
+  
+- DTOs (*Data Transfer Objects*), which are the data structures used for interaction between the core business classes and helper classes. These data structures don't store business-related models but are responsible solely for pure information transfer.
+
+#figure(
+  image(
+    "img/sys-arch.drawio.png",
+    width: 80%
+  ),
+  caption: [System architecture]
+) 
 
 == General workflow
 
@@ -123,6 +236,10 @@ shell:>open /usr/src/sample-project/src/main/java
 == Test Cases
 
 - Case A: The most basic case
+
+- Case B: Large-scale Java library case
+
+We have chosen the commons-lang library, open-sourced by the Apache Foundation, as our test project. Apache Commons is an excellent project within the Java ecosystem, offering high-quality and reliable components for almost every aspect of Java. This library consists of over two hundred classes and more than three thousand methods, totaling 175,000 lines of code. Choosing such a vast project to test our own is a significant challenge. The version we selected is located at commit gbe417ff07.
 
 
 
