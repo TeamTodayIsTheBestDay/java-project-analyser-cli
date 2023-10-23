@@ -66,10 +66,10 @@ public class IncompleteCodeHelper {
 
         }
         if(!stack.isEmpty()){
-            String str="";
+            StringBuilder str= new StringBuilder();
             while(!stack.isEmpty()){
-                str+=stack.peek();
-                str+="  ";
+                str.append(stack.peek());
+                str.append("  ");
             }
             printReviewError(str+"找不到匹配项",path);
         }
