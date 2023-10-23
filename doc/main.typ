@@ -10,7 +10,8 @@
 
 #outline(
     title: "Table of Contents",
-    indent: 2em
+    indent: 2em,
+    depth: 2
 ) 
 
 #pagebreak()
@@ -47,6 +48,7 @@ Here is a feature list which is implemented by our team:
 - Provide user-friendly output for time-consuming operations
 - List all files, classes and interfaces, and methods in the project
 - List all instances of a specific class within the project
+- Distinguish different function overloads and prompt users to make a selection in cases where overloads exist.
 - Find all other methods called by a specified method
 - Identify all instances where a specific method is called within the project
 - Trace all methods that could potentially call a specified method
@@ -118,18 +120,21 @@ shell:>open /usr/src/sample-project/src/main/java
 Example output:
 
 ```
-shell:>open D:\\java-project-analyser-sample\\src\\main\\java
-Please wait.
+shell:>open D:\\IdeaProjects\\java-project-analyser-sample\\src\\main\\java
+Resolving 100% [============================] 1/1 (0:00:00 / 0:00:00) 
+
+Indexing 100% [============================] 3/3 (0:00:00 / 0:00:00) 
+\
+
 Open project success: 
-                       1 packages found.
-                       1 files found.
-                       1 classes and interfaces found.
-                       3 methods found.
-                       3ms used.
-Successfully indexed methods and classes in 0ms.
+                      1 packages found.
+                      1 files found.
+                      1 classes and interfaces found.
+                      3 methods found.
+                      213ms used.
 ```
 
-== Querying method invocation relationships
+== Query method invocation relationships
 
 Use `func` command to query the method invocation relationships of a specified method:
 
@@ -146,24 +151,39 @@ shell:>func main.Test sayHello
 Example output:
 
 ```
-shell:>func main.Test sayHello
+shell:> func main.Test sayHello
 Please wait.
-****************** Invokes ******************
-	->(java.io.PrintStream) println
-*********************************************
-
-****************** Invoked by ******************
-	<-(main.Test) introduction
-			<-(main.Test) main
-	<-(main.Test) main
+******************** Invokes *******************
+	-> java.io.PrintStream.println(java.lang.String)
 ************************************************
 
+****************** Invoked by ******************
+	<- main.Test.introduction(java.lang.String)
+			<- main.Test.main(java.lang.String[])
+	<- main.Test.main(java.lang.String[])
+************************************************
+
+
 Time cost:
-		Get Invokes: 4 ms
-		Get Invoked: 6 ms
+		Get Invokes: 3 ms
+		Get Invoked: 1 ms
+shell:>
 ```
 
-== Querying method parameter sources
+Some times you may want to specify a method from its overloads. The program will distinguish this situation and ask you to choose the method you need:
+
+```
+shell:>func org.apache.commons.lang3.StringUtils split
+***************
+ 1) org.apache.commons.lang3.StringUtils.split(String)
+ 2) org.apache.commons.lang3.StringUtils.split(String, String)
+ 3) org.apache.commons.lang3.StringUtils.split(String, String, int)
+ 4) org.apache.commons.lang3.StringUtils.split(String, char)
+***************
+Please choose one: 
+```
+
+== Query method parameter sources
 
 Use `param` command to query the parameter sources of a specified method:
 
@@ -182,15 +202,16 @@ Example output:
 ```
 shell:>param main.Test sayHello
 Please wait.
-***********Parameter Origin***********
+********************Parameter Origin********************
 	String name:
-			  "Garfield": (main.Test) introduction
-			  "Jon": (main.Test) sayHello
 			  name1: (main.Test) introduction
 				 <- "Odie": (main.Test) main
-**************************************
+			  "Garfield": (main.Test) introduction
+			  "Jon": (main.Test) sayHello
+********************************************************
 
-Time cost: 2 ms
+Time cost: 4 ms
+shell:>
 ```
 
 == Automaticly fixing syntax errors
@@ -223,9 +244,59 @@ Specifically, our system is mainly divided into the following parts:
 
 == General workflow
 
+We have the control and data flow as below:
+
+#figure(
+  image(
+    "img/sys-flow.drawio.png",
+    width: 80%
+  ),
+  caption: [System control and data flow]
+) 
+
+#pagebreak()
+
+=== Project loading workflow
+
+#figure(
+  image(
+    "img/sys-workflow-load.drawio.png",
+    width: 100%
+  ),
+  caption: [Project loading workflow]
+) 
+
+#pagebreak()
+
+=== Methods invocation relationship querying workflow
+
+#figure(
+  image(
+    "img/sys-workflow-method.drawio.png",
+    width: 75%
+  ),
+  caption: [Methods invocation relationship querying workflow]
+) 
+
+#pagebreak()
+
+=== Methods parameters origin querying workflow
+
+#figure(
+  image(
+    "img/sys-workflow-parameters.drawio.png",
+    width: 75%
+  ),
+  caption: [Methods parameters origin querying workflow]
+) 
+
 = Implementation
 
 == Major data structures
+
+Abstracting a Java project is a complex task because Java projects are hierarchically composed of packages, files, classes and interfaces, methods, and numerous nested expressions and statements. Moreover, to enhance the efficiency of the program's execution, we need to store and index commonly used metadata, such as the classes and methods within the project. This is because if every time we need to access a specific class and have to search for it and its corresponding file level by level according to the package name, the program's execution efficiency would be terribly poor.
+
+Based on our practical requirements and for the sake of utility and efficiency, we divide a Java project into five levels. Each level is represented and stored by a unique Java class and holds the data for the next level. They are: Java Project, Java Package, Java File, Java Class, and Java Method. Among them, the levels of Project, Class, and Method are the most commonly used, while the other two levels mainly serve to maintain the tree structure of the project.
 
 == Efficiency considerations
 

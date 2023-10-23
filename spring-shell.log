@@ -149,3 +149,31 @@
 1698066943873:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
 1698066959606:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
 1698067255780:func org.apache.commons.lang3.StringUtils split
+1698076437514:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698076454398:func org.apache.commons.lang3.StringUtils isBlank
+1698076467398:stacktrace
+1698076585312:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698076611080:func org.apache.commons.lang3.StringUtils isBlank
+1698076674335:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698077103826:func org.apache.commons.lang3.StringUtils isBlank
+1698077125766:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698077182372:func org.apache.commons.lang3.StringUtils isBlank
+1698077231328:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698077297331:func org.apache.commons.lang3.StringUtils isBlank
+1698077579047:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698077592753:func org.apache.commons.lang3.StringUtils isBlank
+1698077606314:func org.apache.commons.lang3.StringUtils split
+1698079563255:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698079580724:func org.apache.commons.lang3.StringUtils isBlank
+1698079830019:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698079842039:func org.apache.commons.lang3.StringUtils isBlank
+1698080117596:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698080135692:func org.apache.commons.lang3.StringUtils isBlank
+1698080279583:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698080357594:func org.apache.commons.lang3.StringUtils isBlank
+1698080411203:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1698080560892:open C:\\\\Users\\\\cinea\\\\build\\\\commons-lang\\\\src\\\\main\\\\java
+1698080713140:func org.apache.commons.lang3.StringUtils isBlank
+1698081300659:open D:\\\\IdeaProjects\\\\java-project-analyser-sample\\\\src\\\\main\\\\java
+1698081338179:param org.apache.commons.lang3.StringUtils isBlank
+1698081343831:param main.Test sayHello

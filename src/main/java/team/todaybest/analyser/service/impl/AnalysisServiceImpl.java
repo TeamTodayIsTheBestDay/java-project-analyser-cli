@@ -1,6 +1,5 @@
 package team.todaybest.analyser.service.impl;
 
-import com.google.common.collect.ImmutableList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import team.todaybest.analyser.helper.ProjectListHelper;
@@ -122,13 +121,13 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
 
         JavaMethod javaMethod;
-        var candidates = methodService.getAllOverloads(javaProject,classReference,methodName);
-        if(candidates.isEmpty()){
+        var candidates = methodService.getAllOverloads(javaProject, classReference, methodName);
+        if (candidates.isEmpty()) {
             System.err.println("No method found with specific class and name.");
             return;
-        } else if (candidates.size()==1) {
+        } else if (candidates.size() == 1) {
             javaMethod = javaProject.getMethodTrie().get(candidates.get(0));
-        }else {
+        } else {
             var k = ShellHelper.consoleChooseOne(candidates);
             javaMethod = javaProject.getMethodTrie().get(candidates.get(k));
         }
@@ -144,7 +143,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         long startTime, endTime;
 
         startTime = System.currentTimeMillis();
-        var invokes = methodService.getInvokes(javaProject, javaMethod);
+        var invokes = methodService.getInvokes(javaProject, javaMethod, depth);
         endTime = System.currentTimeMillis();
         var getInvokesTime = endTime - startTime;
 
@@ -161,44 +160,42 @@ public class AnalysisServiceImpl implements AnalysisService {
             throw new RuntimeException(e);
         }
 
-        printInvokes(invokes);
-        printInvoked(invoked);
+        printInvokes(invokes, true);
+        printInvokes(invoked, false);
 
         System.out.printf("%nTime cost:%n\t\tGet Invokes: %d ms%n\t\tGet Invoked: %d ms%n", getInvokesTime, getInvokedByTime);
     }
 
-    private void printInvokes(List<ImmutableList<String>> invokes) {
-        System.out.println("****************** Invokes ******************");
-        invokes.forEach(invoke -> {
-            System.out.printf("\t->(%s) %s%n", invoke.get(0), invoke.get(1));
-        });
-        System.out.println("*********************************************");
-        System.out.println();
-    }
-
-    private void printInvoked(List<JavaInvokeChain> invoked) {
-        System.out.println("****************** Invoked by ******************");
-        if (invoked != null) {
-            invoked.forEach(invokedChain -> {
-                printInvokedRecursive(invokedChain, 0);
+    private void printInvokes(List<JavaInvokeChain> invokes, boolean direction) {
+        if (direction) {
+            System.out.println("******************** Invokes *******************");
+        } else {
+            System.out.println("****************** Invoked by ******************");
+        }
+        if (invokes != null) {
+            invokes.forEach(invokedChain -> {
+                printInvokesRecursive(invokedChain, 0, direction);
             });
         }
         System.out.println("************************************************");
         System.out.println();
     }
 
-    private void printInvokedRecursive(JavaInvokeChain invoked, int depth) {
-        if (invoked == null) {
+    private void printInvokesRecursive(JavaInvokeChain invokes, int depth, boolean direction) {
+        if (invokes == null) {
             return;
         }
 
-        System.out.printf("%s<-(%s) %s%n", "\t".repeat(depth * 2 + 1),
-                invoked.getMethod().getJavaClass().getClassReference(), invoked.getMethod().getName());
+        String directionStr = direction ? "->" : "<-";
 
-        var subInvoked = invoked.getInvokedBy();
+        System.out.printf("%s%s %s%n", "\t".repeat(depth * 2 + 1), directionStr,
+                invokes.getMethod().getQualifiedSignature()
+        );
+
+        var subInvoked = invokes.getInvokes();
         if (subInvoked != null) {
             subInvoked.forEach(invokedChain -> {
-                printInvokedRecursive(invokedChain, depth + 1);
+                printInvokesRecursive(invokedChain, depth + 1, direction);
             });
         }
     }
@@ -256,7 +253,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     private void printParameterOrigin(List<List<JavaParameterOrigin>> origin, JavaMethod javaMethod) {
         var parameters = javaMethod.getDeclaration().getParameters();
 
-        System.out.println("***********Parameter Origin***********");
+        System.out.println("********************Parameter Origin********************");
 
         for (int j = 0; j < parameters.size(); j++) {
             System.out.printf("\t%s %s:%n", parameters.get(j).getType().asString(), parameters.get(j).getNameAsString());
@@ -283,6 +280,6 @@ public class AnalysisServiceImpl implements AnalysisService {
             }
         }
 
-        System.out.println("**************************************");
+        System.out.println("********************************************************");
     }
 }

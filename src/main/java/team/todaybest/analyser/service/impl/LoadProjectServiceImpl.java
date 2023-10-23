@@ -38,6 +38,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -165,7 +166,9 @@ public class LoadProjectServiceImpl implements LoadProjectService {
         }
 
         var signature = resolved.getQualifiedSignature();
-        map.getOrDefault(signature, new ArrayList<>()).add(expr);
+
+        map.computeIfAbsent(signature, string -> new ArrayList<>());
+        map.get(signature).add(expr);
 
     }
 

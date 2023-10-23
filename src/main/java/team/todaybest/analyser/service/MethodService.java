@@ -32,7 +32,7 @@ public interface MethodService {
     /**
      * 获取基函数所调用的函数们
      */
-    List<ImmutableList<String>> getInvokes(JavaProject project, JavaMethod method);
+    List<JavaInvokeChain> getInvokes(JavaProject project, JavaMethod method, int depth);
 
     /**
      * 获取调用基函数的函数，需要递归寻找整个调用链。

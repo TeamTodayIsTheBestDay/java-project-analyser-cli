@@ -12,5 +12,5 @@ import java.util.List;
 @Data
 public class JavaInvokeChain {
     private JavaMethod method;
-    private List<JavaInvokeChain> invokedBy;
+    private List<JavaInvokeChain> invokes;
 }
