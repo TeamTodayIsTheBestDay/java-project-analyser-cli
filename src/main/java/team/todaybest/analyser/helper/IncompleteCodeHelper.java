@@ -15,8 +15,8 @@ public class IncompleteCodeHelper {
 
     public static boolean reviewCode(String code, String path) {
         Stack<Character> stack = new Stack<>();
-        boolean inSingleQuotes = false;
-        boolean inDoubleQuotes = false;
+        boolean inSingleQuotes = false;//判断是否在单引号内部
+        boolean inDoubleQuotes = false;//判断是否为双引号内部的字符串
         boolean inComment = false;
         boolean inLineComment = false;
 
@@ -54,18 +54,24 @@ public class IncompleteCodeHelper {
                     stack.push(c);
                 } else if (c == ')' || c == '}' || c == ']') {
                     if (stack.isEmpty()){
-                        printReviewError("括号"+c+"不匹配",path);
+                        printReviewError("括号"+c+"找不到匹配项 ",path);
                     }
                     char lastBracket = stack.pop();
                     if ((c == ')' && lastBracket != '(') || (c == '}' && lastBracket != '{') || (c == ']' && lastBracket != '[')) {
-                        printReviewError("括号不对应",path);
+                        printReviewError(lastBracket+"与"+c+"不匹配",path);
+
                     }
                 }
             }
 
         }
         if(!stack.isEmpty()){
-            printReviewError("括号不匹配",path);
+            StringBuilder str= new StringBuilder();
+            while(!stack.isEmpty()){
+                str.append(stack.peek());
+                str.append("  ");
+            }
+            printReviewError(str+"找不到匹配项",path);
         }
 
         return true;
