@@ -70,6 +70,7 @@ public class IncompleteCodeHelper {
             while (!stack.isEmpty()) {
                 str.append(stack.peek());
                 str.append("  ");
+                stack.pop();
             }
             printReviewError(str + "找不到匹配项", path);
         }
