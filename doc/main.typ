@@ -525,7 +525,7 @@ In our tests, introducing this optimization significantly improved the runtime o
     inset: 10pt,
     align: horizon,
     [*Operation*],[*Before caching*],[*After caching*],
-    [Project Loading],[1806 ms],[],
+    [Project Loading],[1806 ms],[9676 ms],
     [Methods Invocation Querying],[10141 ms],[2 ms],
     [Parameters Origin Querying],[13883 ms],[37 ms],
   ),
@@ -545,16 +545,156 @@ In our project, the AST parsing is facilitated by JavaParser. JavaParser isn't j
 
 Furthermore, JavaParser isn't limited to just parsing. It brings to the table an advanced capability to resolve symbols present in the code. This feature is instrumental for developers as it paves the way for a clearer understanding of the code's semantics. Resolving symbols can be likened to deciphering a puzzle, where each piece (symbol) is put in its rightful place, making the entire picture (code) clear and coherent. By leveraging JavaParser's symbol resolution, we can substantially diminish the complexities developers face, allowing them to focus on the more intricate aspects of code development and optimization.
 
+\
+== External libraries
+
+In our project, numerous outstanding third-party Java open-source libraries are utilized to enhance the system's functionality, improve its stability, and reduce repetitive tasks during development. Their specific details are shown in the table below:
+
+#table(
+  columns: (30%, 70%),
+  inset: 10pt,
+  align: horizon,
+  [*Name*],[*Role*],
+
+  stack(
+    dir: ttb,
+    spacing: 10pt,
+    image("img/lib-spring.png", width: 100%),
+    align(center)[Spring Framework]
+  ),
+  [
+    Provides reliable *inversion of control (IoC)* and *aspect-oriented programming (AOP)* support to our project.
+  ],
+
+  stack(
+    dir: ttb,
+    spacing: 10pt,
+    image("img/lib-springboot.png", width: 100%),
+    // align(center)[Spring Framework]
+  ),
+  [
+    Simplify the process of building production-ready project, and provides *rapid development* support to our project.
+  ],
+
+  stack(
+    dir: ltr,
+    spacing: 10pt,
+    image("img/lib-springshell.png", width: 20%),
+    align(center)[Spring Shell]
+  ),
+  [
+    Facilitate the building of *interactive command-line* applications like our project.
+  ],
+
+  stack(
+    dir: ltr,
+    spacing: 10pt,
+    image("img/lib-javaparser.png", width: 20%),
+    align(center)[JavaParser]
+  ),
+  [
+    Provides *source code parsing* and *symbols resolving* support to our project.
+  ],
+
+  stack(
+    dir: ttb,
+    spacing: 10pt,
+    image("img/lib-lombok.jpg", width: 100%),
+    // align(center)[Spring Framework]
+  ),
+  [
+    Provides annotations to *reduce boilerplate code* in our project and generate data classes, builder pattern and logging. 
+  ],
+
+  stack(
+    dir: ttb,
+    spacing: 10pt,
+    image("img/lib-guava.jpg", width: 100%),
+    // align(center)[Spring Framework]
+  ),
+  [
+    Provides utility methods and classes to ease common programming tasks and reduce boilerplate code. We mainly use the following components of this library: *Concurrent hash set*, *Immuteable list*.
+  ],
+
+  stack(
+    dir: ttb,
+    spacing: 10pt,
+    image("img/lib-apachecommons.png", width: 100%),
+    // align(center)[Spring Framework]
+  ),
+  [
+    Provides utility methods and classes to ease common programming tasks and reduce boilerplate code. We mainly use the following components of this library: *Patricia trie*, *I/O utils*.
+  ],
+)
+
+\
 = Test
 
 == Test Cases
 
-- Case A: The most basic case
+We have two test cases with different role and feature in our project testing.
 
-- Case B: Large-scale Java library case
+- *Case A: The most basic case*
 
-We have chosen the commons-lang library, open-sourced by the Apache Foundation, as our test project. Apache Commons is an excellent project within the Java ecosystem, offering high-quality and reliable components for almost every aspect of Java. This library consists of over two hundred classes and more than three thousand methods, totaling 175,000 lines of code. Choosing such a vast project to test our own is a significant challenge. The version we selected is located at commit gbe417ff07.
+We have chosen the sample code from the assignment outline as our foundational functionality test project. This project is concise and comprehensive, containing a complete call relationship chain, making it ideal for assessing code functionality and correctness.
 
+- *Case B: Large-scale Java library case*
 
+We have chosen the commons-lang library, open-sourced by the Apache Foundation, as our test project. Apache Commons is an excellent project within the Java ecosystem, offering high-quality and reliable components for almost every aspect of Java. This library consists of over two hundred classes and more than three thousand methods, totaling 175,000 lines of code. Choosing such a vast project to test our own is a significant challenge. The version we selected is located at commit `gbe417ff07`.
+
+== Functionality Test
+
+The following is the test result in our functionality test.
+
+- *Case A*
+
+  - Load the project
+
+    #image(
+      "img/16.png",
+      width: 100%
+    )
+
+  - Query method invocation relationships
+
+    #image(
+      "img/17.png",
+      width: 100%
+    )
+
+  - Query method parameters origin
+
+    #image(
+      "img/18.png",
+      width: 100%
+    )
+
+- *Case B*
+
+  - Load the project
+
+    #image(
+      "img/12.png",
+      width: 100%
+    )
+
+  - Query method invocation relationships
+
+    #image(
+      "img/13.png",
+      width: 100%
+    )
+
+    #image(
+      "img/14.png",
+      width: 100%
+    )
+
+  - Query method parameters origin
+
+    #image(
+      "img/15.png",
+      width: 100%
+    )
 
 = Conclusion

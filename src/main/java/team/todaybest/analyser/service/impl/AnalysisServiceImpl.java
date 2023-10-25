@@ -13,7 +13,6 @@ import team.todaybest.analyser.service.*;
 
 import java.io.File;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author cineazhan
@@ -132,8 +131,8 @@ public class AnalysisServiceImpl implements AnalysisService {
             javaMethod = javaProject.getMethodTrie().get(candidates.get(k));
         }
 
-        if (depth > 2) {
-            System.err.println("Warning: you give a depth of more than 2. This may cost very very lots of time!");
+        if (depth > 4) {
+            System.err.println("Warning: you give a depth of more than 4. This may cost very very lots of time!");
         }
 
         // 打开友好提示
@@ -208,23 +207,22 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     @Override
-    public void methodParameterOrigin(String classReference, String functionName, int depth) {
+    public void methodParameterOrigin(String classReference, String methodName, int depth) {
         if (javaProject == null) {
             System.err.println("You haven't opened a project yet. Use \"open <path>\" to open one.");
             return;
         }
 
-        var javaClass = javaProject.getClassMap().get(classReference);
-        if (javaClass == null) {
-            System.err.printf("Class '%s' is not found.%n", classReference);
+        JavaMethod javaMethod;
+        var candidates = methodService.getAllOverloads(javaProject, classReference, methodName);
+        if (candidates.isEmpty()) {
+            System.err.println("No method found with specific class and name.");
             return;
-        }
-
-        var optMethod = javaClass.getMethods().stream()
-                .filter(javaMethod -> Objects.equals(javaMethod.getName(), functionName)).findFirst();
-        if (optMethod.isEmpty()) {
-            System.err.printf("Method '%s' is not found.%n", functionName);
-            return;
+        } else if (candidates.size() == 1) {
+            javaMethod = javaProject.getMethodTrie().get(candidates.get(0));
+        } else {
+            var k = ShellHelper.consoleChooseOne(candidates);
+            javaMethod = javaProject.getMethodTrie().get(candidates.get(k));
         }
 
         // 打开友好提示
@@ -233,7 +231,6 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         long startTime, endTime;
 
-        var javaMethod = optMethod.get();
         startTime = System.currentTimeMillis();
         var result = parameterService.getParameterOrigin(javaProject, javaMethod, depth);
         endTime = System.currentTimeMillis();
