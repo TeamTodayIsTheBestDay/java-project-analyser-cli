@@ -114,26 +114,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     @Override
     public void methodRelationship(String classReference, String methodName, int depth) {
-        if (javaProject == null) {
-            System.err.println("You haven't opened a project yet. Use \"open <path>\" to open one.");
+        JavaMethod javaMethod = methodPreprocess(classReference, methodName, depth);
+        if (javaMethod == null)
             return;
-        }
-
-        JavaMethod javaMethod;
-        var candidates = methodService.getAllOverloads(javaProject, classReference, methodName);
-        if (candidates.isEmpty()) {
-            System.err.println("No method found with specific class and name.");
-            return;
-        } else if (candidates.size() == 1) {
-            javaMethod = javaProject.getMethodTrie().get(candidates.get(0));
-        } else {
-            var k = ShellHelper.consoleChooseOne(candidates);
-            javaMethod = javaProject.getMethodTrie().get(candidates.get(k));
-        }
-
-        if (depth > 4) {
-            System.err.println("Warning: you give a depth of more than 4. This may cost very very lots of time!");
-        }
 
         // 打开友好提示
         var waitThread = new ShellHelper.PleaseWaitThread();
@@ -208,22 +191,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     @Override
     public void methodParameterOrigin(String classReference, String methodName, int depth) {
-        if (javaProject == null) {
-            System.err.println("You haven't opened a project yet. Use \"open <path>\" to open one.");
+        JavaMethod javaMethod = methodPreprocess(classReference, methodName, depth);
+        if (javaMethod == null)
             return;
-        }
-
-        JavaMethod javaMethod;
-        var candidates = methodService.getAllOverloads(javaProject, classReference, methodName);
-        if (candidates.isEmpty()) {
-            System.err.println("No method found with specific class and name.");
-            return;
-        } else if (candidates.size() == 1) {
-            javaMethod = javaProject.getMethodTrie().get(candidates.get(0));
-        } else {
-            var k = ShellHelper.consoleChooseOne(candidates);
-            javaMethod = javaProject.getMethodTrie().get(candidates.get(k));
-        }
 
         // 打开友好提示
         var waitThread = new ShellHelper.PleaseWaitThread();
@@ -247,6 +217,31 @@ public class AnalysisServiceImpl implements AnalysisService {
         System.out.printf("%nTime cost: %d ms%n", endTime - startTime);
     }
 
+    private JavaMethod methodPreprocess(String classReference, String methodName, int depth) {
+        if (javaProject == null) {
+            System.err.println("You haven't opened a project yet. Use \"open <path>\" to open one.");
+            return null;
+        }
+
+        JavaMethod javaMethod;
+        var candidates = methodService.getAllOverloads(javaProject, classReference, methodName);
+        if (candidates.isEmpty()) {
+            System.err.println("No method found with specific class and name.");
+            return null;
+        } else if (candidates.size() == 1) {
+            javaMethod = javaProject.getMethodTrie().get(candidates.get(0));
+        } else {
+            var k = ShellHelper.consoleChooseOne(candidates);
+            javaMethod = javaProject.getMethodTrie().get(candidates.get(k));
+        }
+
+        if (depth > 4) {
+            System.err.println("Warning: you give a depth of more than 4. This may cost very very lots of time!");
+        }
+
+        return javaMethod;
+    }
+
     private void printParameterOrigin(List<List<JavaParameterOrigin>> origin, JavaMethod javaMethod) {
         var parameters = javaMethod.getDeclaration().getParameters();
 
@@ -254,9 +249,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         for (int j = 0; j < parameters.size(); j++) {
             System.out.printf("\t%s %s:%n", parameters.get(j).getType().asString(), parameters.get(j).getNameAsString());
-            for (int i = 0; i < origin.size(); i++) {
+            for (List<JavaParameterOrigin> javaParameterOrigins : origin) {
 
-                var parameterOrigin = origin.get(i).get(j);
+                var parameterOrigin = javaParameterOrigins.get(j);
                 var valueChain = parameterOrigin.getOriginChain();
 
 //                System.out.println("\t\t\t[");
