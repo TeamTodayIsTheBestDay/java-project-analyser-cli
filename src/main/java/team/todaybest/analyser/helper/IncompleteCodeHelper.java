@@ -12,13 +12,25 @@ public class IncompleteCodeHelper {
     private static void printReviewError(String message, String path) {
         System.err.printf("In file %s: %s%n", path, message);
     }
+    // 判断操作符
+    private static boolean isBinaryOperator(char c) {
+        if(c=='+'||c=='-'||c=='*'||c=='/')
+            return true;
+        return false;
+    }
+
+
+    private static boolean isValidStartCharacter(char c) {
+        return Character.isAlphabetic(c) || Character.isDigit(c) || c == '(' || c == '[' || c == '{' || c == '\''||c=='"';
+    }
 
     public static boolean reviewCode(String code, String path) {
         Stack<Character> stack = new Stack<>();
         boolean inSingleQuotes = false;//判断是否在单引号内部
         boolean inDoubleQuotes = false;//判断是否为双引号内部的字符串
-        boolean inComment = false;
-        boolean inLineComment = false;
+        boolean inComment = false;//判断是否在块注释内
+        boolean inLineComment = false;//判断是否在行注释内
+        int flag = 0;//
 
         for (int i = 0; i < code.length(); i++) {
             char c = code.charAt(i);
@@ -43,6 +55,7 @@ public class IncompleteCodeHelper {
             } else if (i < code.length() - 1 && c == '*' && code.charAt(i + 1) == '/' && !inSingleQuotes && !inDoubleQuotes && inComment) {
                 inComment = false;
                 i++;
+                flag=1;
             } else if (i < code.length() - 1 && c == '/' && code.charAt(i + 1) == '/' && !inSingleQuotes && !inDoubleQuotes && !inComment && !inLineComment) {
                 inLineComment = true;
                 i++;
@@ -63,8 +76,37 @@ public class IncompleteCodeHelper {
                         printReviewError(lastBracket + "与" + c + "不匹配", path);
                     }
                 }
+                // 检查操作符后面的字符
+                if (isBinaryOperator(c)) {
+                    if(flag==1){
+                        flag=0;
+                    }
+                    else {
+                        if (code.charAt(i + 1) == '+'||code.charAt(i + 1) == '-'||code.charAt(i + 1) == '>')
+                        {
+                            i++;
+                        }
+                        else
+                        {
+                            if (code.charAt(i + 1) == '=') {
+                                i++;
+                            }
+                            while (i < code.length() - 1 && Character.isWhitespace(code.charAt(i + 1))) {
+                                i++;
+                            }
+                            if (i == code.length() - 1 || !isValidStartCharacter(code.charAt(i + 1))) {
+                                printReviewError("操作数不完整", path);
+                            }
+                        }
+
+                    }
+                }
             }
         }
+
+
+
+
         if (!stack.isEmpty()) {
             StringBuilder str = new StringBuilder();
             while (!stack.isEmpty()) {
