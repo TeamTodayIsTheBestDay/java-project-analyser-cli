@@ -47,7 +47,7 @@ public class IncompleteCodeHelper {
                         inDoubleQuotes = !inDoubleQuotes;
                     }
                 } else if (!inSingleQuotes && !inDoubleQuotes) {  // 即出现了奇数个反斜杠且不在字符串内，在字符串内的无视
-                    printReviewError("不被允许的\\", path);
+                    printReviewError(" impermissible\\", path);
                 }
             } else if (i < code.length() - 1 && c == '/' && code.charAt(i + 1) == '*' && !inSingleQuotes && !inDoubleQuotes && !inComment && !inLineComment) {
                 inComment = true;
@@ -69,11 +69,11 @@ public class IncompleteCodeHelper {
                     stack.push(c);
                 } else if (c == ')' || c == '}' || c == ']') {
                     if (stack.isEmpty()) {
-                        printReviewError("括号" + c + "找不到匹配项 ", path);
+                        printReviewError("Bracket " + c + " does not find a match ", path);
                     }
                     char lastBracket = stack.pop();
                     if ((c == ')' && lastBracket != '(') || (c == '}' && lastBracket != '{') || (c == ']' && lastBracket != '[')) {
-                        printReviewError(lastBracket + "与" + c + "不匹配", path);
+                        printReviewError(lastBracket + " does not match with" + c, path);
                     }
                 }
                 // 检查操作符后面的字符
@@ -95,7 +95,7 @@ public class IncompleteCodeHelper {
                                 i++;
                             }
                             if (i == code.length() - 1 || !isValidStartCharacter(code.charAt(i + 1))) {
-                                printReviewError("操作数不完整", path);
+                                printReviewError("The operand is incomplete", path);
                             }
                         }
 
@@ -114,7 +114,7 @@ public class IncompleteCodeHelper {
                 str.append("  ");
                 stack.pop();
             }
-            printReviewError(str + "找不到匹配项", path);
+            printReviewError(str + "does not find a match", path);
         }
 
         return true;
