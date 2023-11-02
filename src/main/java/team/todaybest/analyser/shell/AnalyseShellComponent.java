@@ -35,13 +35,6 @@ public class AnalyseShellComponent {
         analysisService.listProject();
     }
 
-    @ShellMethod("Get all instances of a specified class.")
-    public void inst(
-            @ShellOption(help = "The reference to the class.") String classReference
-    ) {
-        analysisService.getInstances(classReference);
-    }
-
     @ShellMethod("Show invoke relationships of a specified function.")
     public void func(
             @ShellOption(help = "The reference to the class.") String classReference,
